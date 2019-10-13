@@ -11383,6 +11383,26 @@ StackToRegisterMappingCogit >> genPrimitivePerform [
 	^self genLookupForPerformNumArgs: methodOrBlockNumArgs
 ]
 
+{ #category : #'primitive generators' }
+StackToRegisterMappingCogit >> genPrintHelloStorePop: popBoolean ReceiverVariable: slotIndex [
+	<inline: true>
+	
+	"Pusheo los registros que voy a modificar para después recuperar los valores"
+	self ssPushRegister: ReceiverResultReg.
+	self ssPushRegister: ClassReg.
+	self ssPushRegister: SendNumArgsReg.
+	
+	self CallRT: cePrintHelloTrampoline.
+	
+	"Restauro el contenido de los registros"
+	self ssTop popToReg: SendNumArgsReg.
+	self ssPop: 1.
+	self ssTop popToReg: ClassReg.
+	self ssPop: 1.
+	self ssTop popToReg: ReceiverResultReg.
+	self ssPop: 1.
+]
+
 { #category : #'bytecode generators' }
 StackToRegisterMappingCogit >> genPushActiveContextBytecode [
 	self assert: needsFrame.
@@ -12041,6 +12061,7 @@ StackToRegisterMappingCogit >> genStorePop: popBoolean MaybeContextRemoteInstVar
 { #category : #'bytecode generator stores' }
 StackToRegisterMappingCogit >> genStorePop: popBoolean ReceiverVariable: slotIndex [
 	<inline: true>
+	self genPrintHelloStorePop: popBoolean ReceiverVariable: slotIndex.
 	^self 
 		genStorePop: popBoolean 
 		ReceiverVariable: slotIndex 

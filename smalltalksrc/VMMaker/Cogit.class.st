@@ -269,7 +269,8 @@ Class {
 		'debugOpcodeIndices',
 		'disassemblingMethod',
 		'cogConstituentIndex',
-		'directedSendUsesBinding'
+		'directedSendUsesBinding',
+		'cePrintHelloTrampoline'
 	],
 	#classVars : [
 		'AltBlockCreationBytecodeSize',
@@ -1207,7 +1208,7 @@ Cogit class >> notesAndQueries [
 
 { #category : #accessing }
 Cogit class >> numTrampolines [
-	^39 "31 + 4 each for self and super sends"
+	^40 "31 + 4 each for self and super sends"
 		+ (LowcodeVM ifTrue: [1] ifFalse: [0])
 		+ (COGMTVM ifTrue: [ 2 ] ifFalse: [ 0 ])
 
@@ -8260,6 +8261,12 @@ Cogit >> generateOpenPICPrototype [
 			 end := self outputInstructionsAt: methodZoneBase + headerSize.
 			 self disassembleFrom: methodZoneBase + (self sizeof: CogMethod) to: end - 1.
 			 self halt]"
+]
+
+{ #category : #initialization }
+Cogit >> generatePrintHelloTrampolines [
+	cePrintHelloTrampoline :=  self genTrampolineFor: #cePrintHello
+												called: 'cePrintHelloTrampoline'
 ]
 
 { #category : #initialization }
