@@ -8267,6 +8267,7 @@ Cogit >> generateOpenPICPrototype [
 Cogit >> generatePrintHelloTrampolines [
 	cePrintHelloTrampoline :=  self genTrampolineFor: #cePrintHello
 												called: 'cePrintHelloTrampoline'
+												regsToSave: CallerSavedRegisterMask
 ]
 
 { #category : #initialization }
@@ -8403,6 +8404,7 @@ Cogit >> generateTrampolines [
 	SistaVM ifTrue: [self generateSistaRuntime].
 	self generateEnilopmarts.
 	self generateTracingTrampolines.
+	self generatePrintHelloTrampolines.
 
 	"finish up"
 	self recordGeneratedRunTime: 'methodZoneBase' address: methodZoneBase.
