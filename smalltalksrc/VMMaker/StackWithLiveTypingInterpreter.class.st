@@ -1,6 +1,6 @@
 Class {
 	#name : #StackWithLiveTypingInterpreter,
-	#superclass : #StackInterpreter,
+	#superclass : #StackInterpreterPrimitives,
 	#category : #'VMMaker-Interpreter'
 }
 
