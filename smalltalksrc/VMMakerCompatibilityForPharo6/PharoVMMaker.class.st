@@ -69,14 +69,12 @@ PharoVMMaker >> generateCoInterpreterMT [
 
 { #category : #generation }
 PharoVMMaker >> generateCoInterpreterWithLiveTyping [
-	|interpreterClass|
 
 	VMMaker initializeForPharo.
-	interpreterClass := CoInterpreterWithLiveTyping.
-	(interpreterClass bindingOf: #COGMTVM) value: false.
+	(CoInterpreterWithLiveTyping bindingOf: #COGMTVM) value: false.
 
 	[ VMMaker
-		generateMainVM: interpreterClass
+		generateMainVM: CoInterpreterWithLiveTyping
 		and: StackToRegisterMappingCogit
 		with: #(COGMTVM false
 				ObjectMemory Spur64BitCoMemoryManager
