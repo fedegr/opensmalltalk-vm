@@ -1,5 +1,5 @@
 Class {
 	#name : #CoInterpreterWithLiveTyping,
-	#superclass : #CoInterpreter,
+	#superclass : #CoInterpreterPrimitives,
 	#category : #'VMMaker-JIT'
 }
