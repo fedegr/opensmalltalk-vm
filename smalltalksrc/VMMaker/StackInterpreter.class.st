@@ -18128,6 +18128,12 @@ StackInterpreter >> printHeadFrame [
 	self printFrame: localFP WithSP: localSP
 ]
 
+{ #category : #printing }
+StackInterpreter >> printHello [
+	<inline: false>
+	self cCode: 'printf("hello!!");'.
+]
+
 { #category : #'debug printing' }
 StackInterpreter >> printHex: n [
 	"Print n in hex,  in the form '    0x1234', padded to a width of 10 characters
@@ -21392,7 +21398,11 @@ StackInterpreter >> storeAndPopReceiverVariableBytecode [
 		storePointerImmutabilityCheck: instVarIndex
 		ofObject: rcvr
 		withValue: top.
+	
+	self printHello.
+	
 	self fetchNextBytecode.
+	
 ]
 
 { #category : #'stack bytecodes' }

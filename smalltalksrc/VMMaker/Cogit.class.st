@@ -269,7 +269,8 @@ Class {
 		'debugOpcodeIndices',
 		'disassemblingMethod',
 		'cogConstituentIndex',
-		'directedSendUsesBinding'
+		'directedSendUsesBinding',
+		'cePrintHelloTrampoline'
 	],
 	#classVars : [
 		'AltBlockCreationBytecodeSize',
@@ -1207,7 +1208,7 @@ Cogit class >> notesAndQueries [
 
 { #category : #accessing }
 Cogit class >> numTrampolines [
-	^39 "31 + 4 each for self and super sends"
+	^40 "31 + 4 each for self and super sends"
 		+ (LowcodeVM ifTrue: [1] ifFalse: [0])
 		+ (COGMTVM ifTrue: [ 2 ] ifFalse: [ 0 ])
 
@@ -8263,6 +8264,13 @@ Cogit >> generateOpenPICPrototype [
 ]
 
 { #category : #initialization }
+Cogit >> generatePrintHelloTrampolines [
+	cePrintHelloTrampoline :=  self genTrampolineFor: #cePrintHello
+												called: 'cePrintHelloTrampoline'
+												regsToSave: CallerSavedRegisterMask
+]
+
+{ #category : #initialization }
 Cogit >> generateRunTimeTrampolines [
 	"Generate the run-time entries at the base of the native code zone and update the base."
 	
@@ -8396,6 +8404,7 @@ Cogit >> generateTrampolines [
 	SistaVM ifTrue: [self generateSistaRuntime].
 	self generateEnilopmarts.
 	self generateTracingTrampolines.
+	self generatePrintHelloTrampolines.
 
 	"finish up"
 	self recordGeneratedRunTime: 'methodZoneBase' address: methodZoneBase.

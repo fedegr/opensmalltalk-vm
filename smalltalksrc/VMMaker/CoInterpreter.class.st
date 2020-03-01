@@ -1989,6 +1989,12 @@ CoInterpreter >> ceOuterSend: cacheAddress receiver: methodReceiver [
 ]
 
 { #category : #trampolines }
+CoInterpreter >> cePrintHello [
+	<api>
+	self cCode: 'printf("hello trampoline!");'.
+]
+
+{ #category : #trampolines }
 CoInterpreter >> ceReapAndResetErrorCodeFor: cogMethod [
 	<api>
 	<var: #cogMethod type: #'CogMethod *'>
@@ -3471,6 +3477,7 @@ CoInterpreter >> extendedStoreBytecodePop: popBoolean [
 	popBoolean ifTrue: [ self internalPop: 1 ].
 	variableType = 0 ifTrue:
 		[objectMemory storePointerImmutabilityCheck: variableIndex ofObject: self receiver withValue: value.
+		self printHello.
 		^ self fetchNextBytecode.].
 	variableType = 1 ifTrue:
 		[ self fetchNextBytecode.
