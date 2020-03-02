@@ -1,5 +1,5 @@
 /****************************************************************************
-*   PROJECT: Squeak 
+*   PROJECT: Squeak
 *   FILE:    sqNamedPrims.c
 *   CONTENT: Generic (cross platform) named primitive support
 *
@@ -19,7 +19,7 @@ typedef struct {
   void *primitiveAddress;
 } sqExport;
 
-#include "sqNamedPrims.h"
+#include "pharovm/sqNamedPrims.h"
 
 #undef DEBUG
 
@@ -233,7 +233,7 @@ callInitializersIn(ModuleEntry *module)
 		/* Note: older plugins may not export the compiled module name */
 		DPRINTF(("WARNING: getModuleName() not found in %s\n", module->name));
 	}
-	if(!init1) { 
+	if(!init1) {
 		DPRINTF(("ERROR: setInterpreter() not found\n"));
 		return 0;
 	}
@@ -315,7 +315,7 @@ findAndLoadModule(char *pluginName, sqInt ffiLoad)
 }
 
 /* findOrLoadModule:
-	Look if the given module is already loaded. 
+	Look if the given module is already loaded.
 	If so, return it's handle, otherwise try to load it.
 */
 static ModuleEntry *
@@ -440,11 +440,6 @@ ioLoadExternalFunctionOfLengthFromModuleOfLengthAccessorDepthInto
 /* ioLoadSymbolOfLengthFromModule
 	This entry point is exclusively for the FFI.
 */
-#ifdef PharoVM
-#  define IO_LOAD_GLOBAL(fn) ioLoadFunctionFrom(fn, "")
-#else 
-#  define IO_LOAD_GLOBAL(fn) 0 
-#endif
 void *
 ioLoadSymbolOfLengthFromModule(sqInt functionNameIndex, sqInt functionNameLength, void *moduleHandle)
 {
@@ -457,7 +452,7 @@ ioLoadSymbolOfLengthFromModule(sqInt functionNameIndex, sqInt functionNameLength
 	functionName[functionNameLength] = 0;
 	return moduleHandle
 		? ioFindExternalFunctionIn(functionName, moduleHandle)
-		: IO_LOAD_GLOBAL(functionName);
+		: getModuleSymbol(NULL, functionName);
 }
 
 /* ioLoadModuleOfLength

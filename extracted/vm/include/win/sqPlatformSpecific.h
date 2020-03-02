@@ -18,47 +18,13 @@
 
 #include <windows.h>
 
-
-#ifdef _MSC_VER
-#define squeakFileOffsetType __int64
-#else
-#define squeakFileOffsetType unsigned long long
-#endif
-
-#ifdef WIN32_FILE_SUPPORT
-
-#define NO_STD_FILE_SUPPORT /* STD_FILE or WIN32_FILE are mutually exclusive options */
-#undef sqImageFile
-#undef sqImageFileClose
-#undef sqImageFileOpen
-#undef sqImageFilePosition
-#undef sqImageFileRead
-#undef sqImageFileSeek
-#undef sqImageFileSeekEnd
-#undef sqImageFileWrite
-
-#define sqImageFile usqIntptr_t
-sqInt sqImageFileClose(sqImageFile h);
-sqImageFile sqImageFileOpen(const char *fileName, const char *mode);
-squeakFileOffsetType sqImageFilePosition(sqImageFile h);
-size_t sqImageFileRead(void *ptr, size_t sz, size_t count, sqImageFile h);
-squeakFileOffsetType sqImageFileSeek(sqImageFile h, squeakFileOffsetType pos);
-squeakFileOffsetType sqImageFileSeekEnd(sqImageFile h, squeakFileOffsetType pos);
-size_t sqImageFileWrite(const void *ptr, size_t sz, size_t count, sqImageFile h);
-#else /* when no WIN32_FILE_SUPPORT, add necessary stub for using regular Cross/plugins/FilePlugin functions */
-#include <stdlib.h>
-#include <io.h> /* _get_osfhandle */
-#define PATH_MAX _MAX_PATH
-#define fsync(filenumber) FlushFileBuffers((HANDLE)_get_osfhandle(filenumber))
-#endif /* WIN32_FILE_SUPPORT */
-
 /* pluggable primitive support */
 #if defined(_MSC_VER) || defined(__MINGW32__)
 #  undef EXPORT
 #  define EXPORT(returnType) __declspec( dllexport ) returnType
 #  undef VM_EXPORT
-#  define VM_EXPORT __declspec( dllexport ) 
-#endif 
+#  define VM_EXPORT __declspec( dllexport )
+#endif
 
 
 /* missing functions */
@@ -94,7 +60,7 @@ size_t sqImageFileWrite(const void *ptr, size_t sz, size_t count, sqImageFile h)
 #  endif
 #endif
 
-#else 
+#else
 error "Not Win32 or Win64!"
 #endif /* _WIN32 || _WIN64 */
 

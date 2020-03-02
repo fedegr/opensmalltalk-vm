@@ -1,8 +1,25 @@
 Class {
 	#name : #VMCodeGenerationTest,
 	#superclass : #TestCase,
+	#instVars : [
+		'currentBytecode'
+	],
 	#category : #'VMMakerCompatibilityForPharo6-Tests'
 }
+
+{ #category : #tests }
+VMCodeGenerationTest >> expanded [
+	<expandCases>
+	
+	self methodWithLabels: (currentBytecode bitAnd: 15) << 2.
+	self somethingAfterExpandedMethod.
+]
+
+{ #category : #tests }
+VMCodeGenerationTest >> methodWithCases [
+
+	self dispatchOn: currentBytecode in: #( expanded expanded expanded )
+]
 
 { #category : #'generation-targets' }
 VMCodeGenerationTest >> methodWithCommentInBlock [
@@ -46,6 +63,18 @@ VMCodeGenerationTest >> methodWithIfNilAssignmentOfComplexStatements [
 VMCodeGenerationTest >> methodWithInlinedCommentInBlock [
 
 	nil isNil ifTrue: [ "comment" 1 ]
+]
+
+{ #category : #tests }
+VMCodeGenerationTest >> methodWithLabels: aValue [
+	
+	| temp |
+	temp := 1.
+	aValue ifTrue: [ 
+		^ temp + 1.
+	].
+	self foo.
+	^ temp
 ]
 
 { #category : #'generation-targets' }
@@ -150,6 +179,34 @@ VMCodeGenerationTest >> testEmptyStructWithRedefinedStructNameTypeDef [
  } RedefinedStruct;
 
 #define MockEmptyVMStructWithRedefinedStructName RedefinedStruct' trimBoth
+]
+
+{ #category : #tests }
+VMCodeGenerationTest >> testInlineDispatchesDoesNotDuplicateLabels [
+
+	| translation method codeGenerator inlinedStatementFirstCase inlinedStatementThirdCase labelInsideFirstCase labelInsideThirdCase |
+	method := self class >> #methodWithCases.
+	translation := method asTranslationMethodOfClass: TMethod.
+	codeGenerator := CCodeGeneratorGlobalStructure new.
+	codeGenerator addMethod: ((self class >> #expanded) asTranslationMethodOfClass: TMethod).
+	codeGenerator addMethod: ((self class >> #methodWithLabels:) asTranslationMethodOfClass: TMethod).
+	codeGenerator addMethod: translation.
+
+	codeGenerator prepareMethods.
+	codeGenerator doInlining: true.
+	codeGenerator inlineDispatchesInMethodNamed: #methodWithCases localizingVars: #().
+	
+	inlinedStatementFirstCase := translation statements first cases first statements second.
+	inlinedStatementThirdCase := translation statements first cases third statements second.
+	labelInsideFirstCase := inlinedStatementFirstCase method statements sixth.
+	labelInsideThirdCase := inlinedStatementThirdCase method statements sixth.
+	self assert: labelInsideFirstCase isLabel.
+	self assert: labelInsideThirdCase isLabel.
+
+	self
+		deny: labelInsideFirstCase label
+		equals: labelInsideThirdCase label
+
 ]
 
 { #category : #tests }

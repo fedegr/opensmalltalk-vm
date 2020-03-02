@@ -1,9 +1,6 @@
-#include <pharo.h>
+#include "pharovm/pharo.h"
 #include <Windows.h>
 #include <DbgHelp.h>
-
-void pushOutputFile(FILE* aFile);
-void popOutputFile();
 
 void ifValidWriteBackStackPointersSaveTo(void *theCFP, void *theCSP, char **savedFPP, char **savedSPP);
 
@@ -57,11 +54,11 @@ EXPORT(void) printCrashDebugInformation(LPEXCEPTION_POINTERS exp){
 	//This is awful but replace the stdout to print all the messages in the file.
 	getCrashDumpFilenameInto(crashdumpFileName);
 	crashDumpFile = fopen(crashdumpFileName, "a+");
-	pushOutputFile(crashDumpFile);
+	vm_setVMOutputStream(crashDumpFile);
 
 	reportStackState(exp, date, crashDumpFile);
 
-	popOutputFile();
+	vm_setVMOutputStream(stdout);
 	fclose(crashDumpFile);
 
 	reportStackState(exp, date, stdout);

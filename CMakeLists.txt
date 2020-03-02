@@ -6,8 +6,10 @@ cmake_policy(SET CMP0053 NEW)
 include(macros.cmake)
 
 set(VERSION_MAJOR 8)
-set(VERSION_MINOR 1)
+set(VERSION_MINOR 2)
 set(VERSION_PATCH 0)
+
+set(APPNAME Pharo CACHE STRING "VM Application name")
 
 get_commit_hash(GIT_COMMIT_HASH)
 get_git_describe(GIT_DESCRIBE)
@@ -20,7 +22,7 @@ if ((CMAKE_HOST_UNIX) AND (${CMAKE_HOST_SYSTEM_NAME} MATCHES "CYGWIN*"))
   message(STATUS "Building on CYGWIN CMAKE: Adapting paths")
   set(CYGWIN 1)
   set(WIN 1)
-  
+
   # specify the cross compiler
   set(CMAKE_TOOLCHAIN_PREFIX x86_64-w64-mingw32)
 
@@ -62,7 +64,7 @@ if(WIN)
     #Tell the system we are not in UNIX. This is required for Cygwin builds
     unset(UNIX)
     unset(UNIX CACHE)
-    
+
   	# transform the path into a windows path with unix backslashes C:/bla/blu
   	# this is the path required to send as argument to libraries outside of the control of cygwin (like pharo itself)
   	execute_process(
@@ -77,13 +79,13 @@ if(WIN)
     set(CMAKE_SHARED_LIBRARY_PREFIX "")
     set(CMAKE_SHARED_LIBRARY_SUFFIX ".dll")
     set(CMAKE_SHARED_MODULE_PREFIX "")
-    set(CMAKE_SHARED_MODULE_SUFFIX ".dll")    
+    set(CMAKE_SHARED_MODULE_SUFFIX ".dll")
 
 
 #    if(NOT MSVC)
         set(COMMON_FLAGS "-fwrapv -fdeclspec -msse2 -ggdb2 -m64 -mno-rtd -mms-bitfields -O2 -momit-leaf-frame-pointer -funroll-loops -D_MT -fno-builtin-printf -fno-builtin-putchar -fno-builtin-fprintf -Wall -Wno-unused-variable -fno-optimize-sibling-calls")
 #    endif()
-    
+
     set(OS_TYPE "Win32")
     set(VM_TARGET_OS "Win64")
 
@@ -94,14 +96,14 @@ if(WIN)
 
     #Setting minimal Windows Version to VISTA
     add_definitions(-D_WIN32_WINNT=0x0600 -DWINVER=0x0600 -DNTDDI_VERSION=0x06000000 -DWIN64=1)
-    
+
 elseif(UNIX)
 
     # Use the default path to send as argument of extrernal apps (like pharo itself)
     set(CMAKE_CURRENT_SOURCE_DIR_TO_OUT ${CMAKE_CURRENT_SOURCE_DIR})
     set(CMAKE_CURRENT_BINARY_DIR_TO_OUT ${CMAKE_CURRENT_BINARY_DIR})
 
-    set(COMMON_FLAGS "")
+    set(COMMON_FLAGS "-Wall")
 
     add_definitions(-DLSB_FIRST=1)
 
@@ -111,10 +113,10 @@ elseif(UNIX)
     if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
         set(OSX 1)
         set(OS_TYPE "Mac OS")
-        set(VM_TARGET_OS "1000") # Used to recognise OS X      
-        
+        set(VM_TARGET_OS "1000") # Used to recognise OS X
+
         set(COMMON_FLAGS "-stdlib=libc++ -mmacosx-version-min=10.7 ${COMMON_FLAGS}")
-        
+
     elseif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
         set(VM_TARGET_OS "linux-gnu")
     else()
@@ -145,16 +147,18 @@ add_definitions(-D"VM_LABEL\(foo\)=0")
 string(LENGTH "${CMAKE_SOURCE_DIR}/" SOURCE_PATH_SIZE)
 add_definitions("-DSOURCE_PATH_SIZE=${SOURCE_PATH_SIZE}")
 
-if(UNIX AND NOT OSX)
-    set(VM_EXECUTABLE_NAME pharo)
+if(UNIX AND NOT OSX AND NOT WIN)
+    set(VM_EXECUTABLE_NAME pharo CACHE STRING "VM Executable name")
 else()
-    set(VM_EXECUTABLE_NAME Pharo)
+    set(VM_EXECUTABLE_NAME Pharo CACHE STRING "VM Executable name")
 endif()
 
-set(VM_LIBRARY_NAME PharoVMCore)
-set(VM_NAME Pharo)
+message(STATUS "Building ${APPNAME} with executable named ${VM_EXECUTABLE_NAME}")
+
+set(VM_LIBRARY_NAME ${APPNAME}VMCore)
+set(VM_NAME ${APPNAME})
 set(PHARO_VM TRUE)
-set(DEFAULT_IMAGE_NAME Pharo.image)
+set(DEFAULT_IMAGE_NAME ${APPNAME}.image)
 
 set(VM_TARGET "${CMAKE_SYSTEM}")
 
@@ -191,7 +195,17 @@ endif()
 set(VMMAKER_OUTPUT_PATH "build/vmmaker")
 make_directory(${VMMAKER_OUTPUT_PATH})
 set(EXECUTABLE_OUTPUT_PATH "build/vm")
-set(LIBRARY_OUTPUT_PATH "build/vm")
+
+#If in OSX, configure creation of Bundle
+if (OSX)
+  set(LIBRARY_OUTPUT_DIRECTORY "build/vm/$<CONFIG>/${VM_EXECUTABLE_NAME}.app/Contents/MacOS/Plugins")
+else()
+  set(LIBRARY_OUTPUT_DIRECTORY ${EXECUTABLE_OUTPUT_PATH})
+endif()
+set(LIBRARY_OUTPUT_PATH ${LIBRARY_OUTPUT_DIRECTORY})
+message(STATUS "Writing libraries to: ${LIBRARY_OUTPUT_DIRECTORY}")
+
+#make_directory(${LIBRARY_OUTPUT_PATH})
 
 check_include_files(dirent.h HAVE_DIRENT_H)
 check_include_files(features.h HAVE_FEATURES_H)
@@ -201,6 +215,7 @@ check_include_files(sys/ndir.h HAVE_SYS_NDIR_H)
 check_include_files(sys/dir.h HAVE_SYS_DIR_H)
 check_include_files(sys/filio.h HAVE_SYS_FILIO_H)
 check_include_files(sys/time.h HAVE_SYS_TIME_H)
+check_include_files(execinfo.h HAVE_EXECINFO_H)
 
 check_include_files(dlfcn.h HAVE_DLFCN_H)
 check_library_exists(dl dlopen "" HAVE_LIBDL)
@@ -218,10 +233,10 @@ check_library_exists(uuid uuid_generate "" HAVE_UUID_GENERATE)
 #Custom command that downloads a Pharo image and VM in ${VMMAKER_OUTPUT_PATH}
 add_custom_command(
   OUTPUT ${VMMAKER_OUTPUT_PATH}/Pharo.image ${VMMAKER_OUTPUT_PATH}/pharo
-  COMMAND wget -O - get.pharo.org/64/70 | bash
-  COMMAND wget -O - get.pharo.org/64/vm70 | bash
+  COMMAND wget -O - https://get.pharo.org/64/80 | bash
+  COMMAND wget -O - https://get.pharo.org/64/vm80 | bash
   WORKING_DIRECTORY ${VMMAKER_OUTPUT_PATH}
-  COMMENT "Downloading Pharo 70")
+  COMMENT "Downloading Pharo 80")
 
 add_custom_command(
   OUTPUT ${VMMAKER_OUTPUT_PATH}/VMMaker.image
@@ -240,7 +255,7 @@ add_custom_command(
   COMMENT "Generating VM files for flavour: ${FLAVOUR}")
 
 #Generating config file
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/includes/config.h.in build/includes/config.h)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/include/pharovm/config.h.in build/include/pharovm/config.h)
 
 message(STATUS "C Compiler: ${CMAKE_C_COMPILER}")
 message(STATUS "C++ Compiler: ${CMAKE_CXX_COMPILER}")
@@ -248,13 +263,15 @@ message(STATUS "Resource Compiler: ${CMAKE_RC_COMPILER}")
 
 
 include_directories(
-	${CMAKE_CURRENT_SOURCE_DIR}/includes
-  ${CMAKE_CURRENT_BINARY_DIR}/build/includes/
-  ${CMAKE_CURRENT_BINARY_DIR}/generated/vm/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_BINARY_DIR}/build/include/
+    ${CMAKE_CURRENT_BINARY_DIR}/build/include/pharovm/
+    ${CMAKE_CURRENT_BINARY_DIR}/generated/vm/include
 )
 
+set(VM_FRONTEND_APPLICATION_TYPE)
 if(WIN)
-    include(win.cmake)
+    include(win32.cmake)
 elseif(OSX)
     include(osx.cmake)
 elseif(UNIX)
@@ -266,19 +283,36 @@ set(GENERATED_SOURCES ${VMSOURCEFILES})
 set(SUPPORT_SOURCES
 	${CMAKE_CURRENT_SOURCE_DIR}/src/debug.c
 	${CMAKE_CURRENT_SOURCE_DIR}/src/utils.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/errorCode.c
 	${CMAKE_CURRENT_SOURCE_DIR}/src/nullDisplay.c
 	${CMAKE_CURRENT_SOURCE_DIR}/src/externalPrimitives.c
 	${CMAKE_CURRENT_SOURCE_DIR}/src/client.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/pathUtilities.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/parameterVector.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/parameters.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/fileDialogCommon.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/stringUtilities.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/imageAccess.c
 )
 
 set(VM_SOURCES
-	${SUPPORT_SOURCES}
-  ${GENERATED_SOURCES}
-	${EXTRACTED_SOURCES}
+    ${SUPPORT_SOURCES}
+    ${GENERATED_SOURCES}
+    ${EXTRACTED_SOURCES}
 )
 
+add_executable(${VM_EXECUTABLE_NAME} ${VM_FRONTEND_APPLICATION_TYPE} ${VM_FRONTEND_SOURCES})
 addLibraryWithRPATH(${VM_LIBRARY_NAME} ${VM_SOURCES})
-add_executable(${VM_EXECUTABLE_NAME} ${VM_FRONTEND_SOURCES})
+
+#If in OSX, configure creation of Bundle
+if(OSX)
+  set_target_properties(
+    ${VM_EXECUTABLE_NAME}
+    PROPERTIES
+    MACOSX_BUNDLE YES
+    MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/resources/mac/Info.plist.in"
+  )
+endif()
 
 target_link_libraries(${VM_EXECUTABLE_NAME} ${VM_LIBRARY_NAME})
 
@@ -295,28 +329,41 @@ add_third_party_dependencies_per_platform()
 configure_installables(bin)
 
 install(FILES
-  ${CMAKE_CURRENT_SOURCE_DIR}/extracted/vm/include/common/sq.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/extracted/vm/include/common/sqMemoryAccess.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/extracted/vm/include/common/sqVirtualMachine.h
-  ${CMAKE_CURRENT_BINARY_DIR}/generated/vm/include/interp.h
-  ${CMAKE_CURRENT_BINARY_DIR}/generated/vm/include/vmCallback.h
-  ${CMAKE_CURRENT_BINARY_DIR}/build/includes/config.h
-  DESTINATION include
+  ${CMAKE_CURRENT_BINARY_DIR}/build/include/pharovm/config.h
+  DESTINATION include/pharovm
   COMPONENT include)
 
-# Packaging Setup 
+install(
+    DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include/pharovm"
+    DESTINATION include
+    COMPONENT include
+    FILES_MATCHING PATTERN *.h)
+
+install(
+    DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/extracted/vm/include/common/"
+    DESTINATION include/pharovm
+    COMPONENT include
+    FILES_MATCHING PATTERN *.h)
+
+install(
+    DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/generated/vm/include/"
+    DESTINATION include/pharovm
+    COMPONENT include
+    FILES_MATCHING PATTERN *.h)
+
+# Packaging Setup
 
 make_directory("build/packages")
 
 get_full_platform_name(FULL_PLATFORM_NAME)
 
-set(CPACK_PACKAGE_DESCRIPTION "Pharo Headless VM for ${FULL_PLATFORM_NAME}")
+set(CPACK_PACKAGE_DESCRIPTION "${APPNAME} Headless VM for ${FULL_PLATFORM_NAME}")
 set(CPACK_PACKAGE_VERSION_MAJOR "${VERSION_MAJOR}")
 set(CPACK_PACKAGE_VERSION_MINOR "${VERSION_MINOR}")
 set(CPACK_PACKAGE_VERSION_PATCH "${VERSION_PATCH}")
-set(CPACK_PACKAGE_VENDOR "Pharo")
+set(CPACK_PACKAGE_VENDOR "${APPNAME}")
 set(CPACK_PACKAGE_HOMEPAGE_URL "https://pharo.org")
-set(CPACK_PACKAGE_FILE_NAME "PharoVM-${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}-${GIT_COMMIT_HASH}-${FULL_PLATFORM_NAME}")
+set(CPACK_PACKAGE_FILE_NAME "${APPNAME}VM-${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}-${GIT_COMMIT_HASH}-${FULL_PLATFORM_NAME}")
 set(CPACK_PACKAGE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/build/packages")
 set(CPACK_PACKAGE_CHECKSUM "SHA1")
 set(CPACK_GENERATOR "ZIP")

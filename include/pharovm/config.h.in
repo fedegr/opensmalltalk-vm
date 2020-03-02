@@ -1,8 +1,13 @@
+#ifndef PHAROVM_CONFIG_H
+#define PHAROVM_CONFIG_H
+
+#pragma once
+
 /* Common configurations */
 #define VM_NAME "@VM_NAME@"
 #define DEFAULT_IMAGE_NAME "@DEFAULT_IMAGE_NAME@"
 
-/* Availabilit of Functions */
+/* Availability of Functions */
 
 #cmakedefine HAVE_DIRENT_H
 #cmakedefine HAVE_FEATURES_H
@@ -12,6 +17,7 @@
 #cmakedefine HAVE_SYS_DIR_H
 #cmakedefine HAVE_SYS_FILIO_H
 #cmakedefine HAVE_SYS_TIME_H
+#cmakedefine HAVE_EXECINFO_H
 
 #cmakedefine AVE_DLFCN_H
 #cmakedefine HAVE_LIBDL
@@ -54,3 +60,5 @@
 #endif
 
 #define VM_BUILD_SOURCE_STRING "@BUILT_FROM@"
+
+#endif //PHAROVM_CONFIG_H
