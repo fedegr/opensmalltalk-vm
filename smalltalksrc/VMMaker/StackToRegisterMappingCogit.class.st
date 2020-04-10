@@ -3527,6 +3527,81 @@ StackToRegisterMappingCogit >> genJumpTo: targetBytecodePC [
 	^0
 ]
 
+{ #category : #'live-typing primitive generators' }
+StackToRegisterMappingCogit >> genKeepInstanceVariableReceiverVariableTypeInformationForReceiverVariable: slotIndex [
+	<inline: true>
+	"
+	Dónde espera los parámetros del trampoline.
+		assignedObject  ->  ClassReg
+		rcvr -> ReceiverResultReg
+		index -> SendNumArgsReg
+	"
+
+	"Pusheo los registros que voy a modificar para después recuperar los valores"
+	self ssPushRegister: ReceiverResultReg.
+	self ssPushRegister: ClassReg.
+	self ssPushRegister: SendNumArgsReg.
+	
+	"En SendNumArgsReg pongo el índice de instVar"
+	self MoveCq: slotIndex R: SendNumArgsReg.
+	
+	"El rcvr en ReceiverResultReg (ya está)"
+	
+	"ClassReg necesito el assigned object...".
+	self MoveR: Extra0Reg R: ClassReg.
+	
+	self CallRT: ceKeepInstanceVariableTypeInformationForinatTrampoline.
+	
+	"Restauro el contenido de los registros"
+	self ssTop popToReg: SendNumArgsReg.
+	self ssPop: 1.
+	self ssTop popToReg: ClassReg.
+	self ssPop: 1.
+	self ssTop popToReg: ReceiverResultReg.
+	self ssPop: 1.
+
+]
+
+{ #category : #'live-typing primitive generators' }
+StackToRegisterMappingCogit >> genLiveTypingStorePop: popBoolean ReceiverVariable: slotIndex [
+	<inline: true>
+	"
+	Dónde espera los parámetros del trampoline.
+		assignedObject  ->  ClassReg
+		rcvr -> ReceiverResultReg
+		index -> SendNumArgsReg
+	"
+
+	"Pusheo los registros que voy a modificar para después recuperar los valores"
+	self ssPushRegister: ReceiverResultReg.
+	self ssPushRegister: ClassReg.
+	self ssPushRegister: SendNumArgsReg.
+	
+	"En SendNumArgsReg pongo el índice de instVar"
+	"self MoveCq: slotIndex R: SendNumArgsReg."
+	
+	"El rcvr en ReceiverResultReg (ya está)"
+	
+	"ClassReg necesito el assigned object...".
+	"self MoveR: Extra0Reg R: ClassReg."
+	
+	"Llamo al trampoline - guardo todos los registros por las dudas"
+	"Ojo al nombre! Si no se llama igual que lo que llama, parece que pincha,
+	el nombre ceKeepInstanceVariableTypeInformationForinat fue autogenerado
+	(me puteó al compilar porque no se llamaba igual)"
+	
+	self CallRT: ceKeepInstanceVariableTypeInformationForinatTrampoline.
+	
+	"Restauro el contenido de los registros"
+	self ssTop popToReg: SendNumArgsReg.
+	self ssPop: 1.
+	self ssTop popToReg: ClassReg.
+	self ssPop: 1.
+	self ssTop popToReg: ReceiverResultReg.
+	self ssPop: 1.
+
+]
+
 { #category : #'primitive generators' }
 StackToRegisterMappingCogit >> genLoadArgAtDepth: n into: reg [
 	"All machine code primitives apart from perform: have only
@@ -12048,7 +12123,8 @@ StackToRegisterMappingCogit >> genStorePop: popBoolean MaybeContextRemoteInstVar
 { #category : #'live-typing bytecode generator stores' }
 StackToRegisterMappingCogit >> genStorePop: popBoolean ReceiverVariable: slotIndex [
 	<inline: true>
-	self genPrintHelloStorePop: popBoolean ReceiverVariable: slotIndex.
+	"self genPrintHelloStorePop: popBoolean ReceiverVariable: slotIndex."
+	self genKeepInstanceVariableReceiverVariableTypeInformationForReceiverVariable: slotIndex.
 	
 	^self 
 		genStorePop: popBoolean 
