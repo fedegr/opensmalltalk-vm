@@ -17,6 +17,13 @@ CoInterpreterWithLiveTyping >> cePrintHello [
 
 ]
 
+{ #category : #trampolines }
+CoInterpreterWithLiveTyping >> cePrintReceiver: receiver [ 
+	<api>
+	self printReceiver: receiver.
+
+]
+
 { #category : #'stack bytecodes' }
 CoInterpreterWithLiveTyping >> extendedStoreBytecodePop: popBoolean [
 	"Override to use itemporary:in:put:"
@@ -30,7 +37,8 @@ CoInterpreterWithLiveTyping >> extendedStoreBytecodePop: popBoolean [
 	variableType = 0 ifTrue:
 		[objectMemory storePointerImmutabilityCheck: variableIndex ofObject: self receiver withValue: value.
 		"self printHello."
-		self keepInstanceVariableTypeInformationFor: value in: self receiver at: variableIndex.
+		self printReceiver: self receiver.
+		"self keepInstanceVariableTypeInformationFor: value in: self receiver at: variableIndex."
 		^ self fetchNextBytecode.].
 	variableType = 1 ifTrue:
 		[ self fetchNextBytecode.
