@@ -8143,8 +8143,8 @@ Cogit >> generateLiveTypingTrampolines [
 												called: 'ceKeepInstanceVariableTypeInformationForinatTrampoline'
 												regsToSave: CallerSavedRegisterMask."
 	
-	cePrintReceiverTrampoline := self genTrampolineFor: #printReceiver:
-												called: 'cePrintRReceiverTrampoline'
+	cePrintReceiverTrampoline := self genTrampolineFor: #cePrintReceiver:
+												called: 'cePrintReceiverTrampoline'
 												arg: ReceiverResultReg
 												regsToSave: CallerSavedRegisterMask.
 ]
