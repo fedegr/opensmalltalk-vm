@@ -5,12 +5,6 @@ Class {
 }
 
 { #category : #trampolines }
-CoInterpreterWithLiveTyping >> ceKeepInstanceVariableTypeInformationFor: anAssignedObject in: rcvr at: instVarIndex [
-	<api>
-	self keepInstanceVariableTypeInformationFor: anAssignedObject in: rcvr at: instVarIndex.
-]
-
-{ #category : #trampolines }
 CoInterpreterWithLiveTyping >> cePrintHello [ 
 	<api>
 	self cCode: 'printf("hello trampoline!");'.
@@ -38,7 +32,6 @@ CoInterpreterWithLiveTyping >> extendedStoreBytecodePop: popBoolean [
 		[objectMemory storePointerImmutabilityCheck: variableIndex ofObject: self receiver withValue: value.
 		"self printHello."
 		self printReceiver: self receiver.
-		"self keepInstanceVariableTypeInformationFor: value in: self receiver at: variableIndex."
 		^ self fetchNextBytecode.].
 	variableType = 1 ifTrue:
 		[ self fetchNextBytecode.

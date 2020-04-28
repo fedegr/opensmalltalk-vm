@@ -271,7 +271,6 @@ Class {
 		'cogConstituentIndex',
 		'directedSendUsesBinding',
 		'cePrintHelloTrampoline',
-		'ceKeepInstanceVariableTypeInformationForinatTrampoline',
 		'cePrintReceiverTrampoline'
 	],
 	#classVars : [
@@ -1210,7 +1209,7 @@ Cogit class >> notesAndQueries [
 
 { #category : #'live-typing accessing' }
 Cogit class >> numLiveTypingTrampolines [
-	^3.
+	^2.
 ]
 
 { #category : #'live-typing accessing' }
@@ -8138,10 +8137,6 @@ Cogit >> generateLiveTypingTrampolines [
 	cePrintHelloTrampoline := self genTrampolineFor: #cePrintHello
 												called: 'cePrintHelloTrampoline'
 												regsToSave: CallerSavedRegisterMask.
-												
-"	ceKeepInstanceVariableTypeInformationForinatTrampoline := self genTrampolineFor: #ceKeepInstanceVariableTypeInformationFor:in:at:
-												called: 'ceKeepInstanceVariableTypeInformationForinatTrampoline'
-												regsToSave: CallerSavedRegisterMask."
 	
 	cePrintReceiverTrampoline := self genTrampolineFor: #cePrintReceiver:
 												called: 'cePrintReceiverTrampoline'
