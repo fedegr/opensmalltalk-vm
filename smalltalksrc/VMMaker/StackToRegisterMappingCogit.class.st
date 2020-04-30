@@ -11394,6 +11394,8 @@ StackToRegisterMappingCogit >> genPrintHelloStorePop: popBoolean ReceiverVariabl
 StackToRegisterMappingCogit >> genPrintReceiver [
 	<inline: true>
 
+   self voidReceiverResultRegContainsSelf.
+   self ssAllocateCallReg: ReceiverResultReg.
 	self CallRT: cePrintReceiverTrampoline.
 ]
 

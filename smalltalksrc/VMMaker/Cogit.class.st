@@ -8141,7 +8141,7 @@ Cogit >> generateLiveTypingTrampolines [
 	cePrintReceiverTrampoline := self genTrampolineFor: #cePrintReceiver:
 												called: 'cePrintReceiverTrampoline'
 												arg: ReceiverResultReg
-												regsToSave: CallerSavedRegisterMask.
+												"regsToSave: CallerSavedRegisterMask".
 ]
 
 { #category : #'method map' }
