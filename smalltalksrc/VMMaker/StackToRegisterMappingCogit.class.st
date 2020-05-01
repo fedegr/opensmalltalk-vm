@@ -11395,7 +11395,9 @@ StackToRegisterMappingCogit >> genPrintReceiver [
 	<inline: true>
 
    self voidReceiverResultRegContainsSelf.
-   self ssAllocateCallReg: ReceiverResultReg.
+
+	self ssAllocateCallReg: ReceiverResultReg and: VarBaseReg and: FPReg and: Extra2Reg.
+
 	self CallRT: cePrintReceiverTrampoline.
 ]
 
