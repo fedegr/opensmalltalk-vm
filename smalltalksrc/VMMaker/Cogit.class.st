@@ -5298,6 +5298,42 @@ Cogit >> compileCallFor: aRoutine numArgs: numArgs arg: regOrConst0 arg: regOrCo
 	backEnd genRestoreRegs: regsToSave
 ]
 
+{ #category : #'live-typing initialization' }
+Cogit >> compileCallFor: aRoutine numArgs: numArgs arg: regOrConst0 arg: regOrConst1 arg: regOrConst2 arg: regOrConst3 resultReg: resultRegOrNone regsToSave: regMask alignStack: alignStack [
+	"Generate a call to aRoutine with up to 4 arguments.  If resultRegOrNone is not
+	 NoReg assign the C result to resultRegOrNone.  If saveRegs, save all registers.
+	 Hack: a negative arg value indicates an abstract register, a non-negative value
+	 indicates a constant."
+	"Fix taken from https://github.com/guillep/opensmalltalk-vm/tree/livetyping-trampolineexperiment"
+	<var: #aRoutine type: #'void *'>
+	<inline: false>
+	| regsToSave |
+	regsToSave := resultRegOrNone = NoReg
+						ifTrue: [regMask]
+						ifFalse: [regMask bitClear: (self registerMaskFor: resultRegOrNone)].
+	cStackAlignment > objectMemory wordSize ifTrue:
+		[backEnd
+			genAlignCStackSavingRegisters: regsToSave
+			numArgs: (alignStack ifTrue: [ numArgs ] ifFalse: [ |argsToSendToStack|
+				argsToSendToStack := numArgs.
+				(self registerMask: regMask contains: regOrConst0) ifTrue: [ argsToSendToStack := argsToSendToStack - 1].
+				(self registerMask: regMask contains: regOrConst1) ifTrue: [ argsToSendToStack := argsToSendToStack - 1].
+				(self registerMask: regMask contains: regOrConst2) ifTrue: [ argsToSendToStack := argsToSendToStack - 1].
+				(self registerMask: regMask contains: regOrConst3) ifTrue: [ argsToSendToStack := argsToSendToStack - 1].
+				argsToSendToStack
+			])
+			wordAlignment: cStackAlignment / objectMemory wordSize].
+	backEnd
+		genSaveRegs: regsToSave;
+		genMarshallNArgs: numArgs arg: regOrConst0 arg: regOrConst1 arg: regOrConst2 arg: regOrConst3.
+	self CallFullRT: (self cCode: [aRoutine asUnsignedInteger]
+						inSmalltalk: [self simulatedTrampolineFor: aRoutine]).
+	resultRegOrNone ~= NoReg ifTrue:
+		[backEnd genWriteCResultIntoReg: resultRegOrNone].
+	backEnd genRemoveNArgsFromStack: numArgs.
+	backEnd genRestoreRegs: regsToSave
+]
+
 { #category : #initialization }
 Cogit >> compileCallFor: aRoutine numArgs: numArgs arg: regOrConst0 arg: regOrConst1 arg: regOrConst2 arg: regOrConst3 resultReg: resultRegOrNone resultReg: resultReg2OrNone regsToSave: regMask [
 	"Generate a call to aRoutine with up to 4 arguments.  If resultRegOrNone is not
@@ -5751,6 +5787,36 @@ Cogit >> compileTrampolineFor: aRoutine numArgs: numArgs floatArg: regOrConst0 f
 		floatArg: regOrConst3
 		resultReg: resultRegOrNone
 		regsToSave: regMask.
+	backEnd genLoadStackPointers.
+	(pushLinkReg and: [backEnd hasLinkRegister])
+		ifTrue:
+			[backEnd hasPCRegister
+				ifTrue: [self PopR: PCReg]
+				ifFalse: [self PopR: LinkReg. 
+						self RetN: 0]]
+		ifFalse: [self RetN: 0]
+]
+
+{ #category : #'live-typing initialization' }
+Cogit >> compileTrampolineWithoutStackAlignFor: aRoutine numArgs: numArgs arg: regOrConst0 arg: regOrConst1 arg: regOrConst2 arg: regOrConst3 regsToSave: regMask pushLinkReg: pushLinkReg resultReg: resultRegOrNone [ 
+	"Generate a trampoline with up to four arguments.  Generate either a call or a jump to aRoutine
+	 as requested by callJumpBar.  If generating a call and resultRegOrNone is not NoReg pass the C
+	 result back in resultRegOrNone.
+	 Hack: a negative value indicates an abstract register, a non-negative value indicates a constant."
+	"Fix taken from https://github.com/guillep/opensmalltalk-vm/tree/livetyping-trampolineexperiment"
+	<var: #aRoutine type: #'void *'>
+	<inline: false>
+	self genSmalltalkToCStackSwitch: pushLinkReg.
+	self
+		compileCallFor: aRoutine
+		numArgs: numArgs
+		arg: regOrConst0
+		arg: regOrConst1
+		arg: regOrConst2
+		arg: regOrConst3
+		resultReg: resultRegOrNone
+		regsToSave: regMask
+		alignStack: false.
 	backEnd genLoadStackPointers.
 	(pushLinkReg and: [backEnd hasLinkRegister])
 		ifTrue:
@@ -7894,6 +7960,56 @@ Cogit >> genTrampolineFor: aRoutine called: aString regsToSave: regMask [
 		appendOpcodes: false
 ]
 
+{ #category : #'live-typing initialization' }
+Cogit >> genTrampolineWithoutStackAlignFor: aRoutine  called: aString arg: regOrConst0 regsToSave: regMask [ 
+	"Generate a trampoline with one argument.
+	 Hack: a negative value indicates an abstract register, a non-negative value indicates a constant."
+	"Fix taken from https://github.com/guillep/opensmalltalk-vm/tree/livetyping-trampolineexperiment"
+	<var: #aRoutine type: #'void *'>
+	<var: #aString type: #'char *'>
+	^self
+		genTrampolineWithoutStackAlignFor: aRoutine
+		called: aString
+		numArgs: 1
+		arg: regOrConst0
+		arg: nil
+		arg: nil
+		arg: nil
+		regsToSave: regMask
+		pushLinkReg: true
+		resultReg: NoReg
+		appendOpcodes: false
+]
+
+{ #category : #'live-typing initialization' }
+Cogit >> genTrampolineWithoutStackAlignFor: aRoutine called: trampolineName numArgs: numArgs arg: regOrConst0 arg: regOrConst1 arg: regOrConst2 arg: regOrConst3 regsToSave: regMask pushLinkReg: pushLinkReg resultReg: resultRegOrNone appendOpcodes: appendBoolean [
+	"Generate a trampoline with up to four arguments.  Generate either a call or a jump to aRoutineOrNil
+	 as requested by callJumpBar.  If generating a call and resultRegOrNone is not NoReg pass the C result
+	 back in resultRegOrNone.
+	 Hack: a negative value indicates an abstract register, a non-negative value indicates a constant."
+	"Fix taken from https://github.com/guillep/opensmalltalk-vm/tree/livetyping-trampolineexperiment"
+	<var: #aRoutine type: #'void *'>
+	<var: #trampolineName type: #'char *'>
+	| startAddress |
+	<inline: false>
+	startAddress := methodZoneBase.
+	appendBoolean ifFalse:
+		[self zeroOpcodeIndex].
+	self compileTrampolineWithoutStackAlignFor: aRoutine
+		numArgs: numArgs
+		arg: regOrConst0
+		arg: regOrConst1
+		arg: regOrConst2
+		arg: regOrConst3
+		regsToSave: regMask
+		pushLinkReg: pushLinkReg
+		resultReg: resultRegOrNone.
+	self outputInstructionsForGeneratedRuntimeAt: startAddress.
+	self recordGeneratedRunTime: trampolineName address: startAddress.
+	self recordRunTimeObjectReferences.
+	^startAddress
+]
+
 { #category : #initialization }
 Cogit >> generateCaptureCStackPointers: captureFramePointer [
 	"Generate the routine that writes the current values of the C frame and stack pointers into
@@ -8138,10 +8254,10 @@ Cogit >> generateLiveTypingTrampolines [
 												called: 'cePrintHelloTrampoline'
 												regsToSave: CallerSavedRegisterMask.
 	
-	cePrintReceiverTrampoline := self genTrampolineFor: #cePrintReceiver:
+	cePrintReceiverTrampoline := self genTrampolineWithoutStackAlignFor: #cePrintReceiver:
 												called: 'cePrintReceiverTrampoline'
 												arg: ReceiverResultReg
-												"regsToSave: CallerSavedRegisterMask".
+												regsToSave: CallerSavedRegisterMask.
 ]
 
 { #category : #'method map' }
@@ -11288,6 +11404,12 @@ Cogit >> recordSendTrace [
 	<api>
 	<cmacro: '() (traceFlags & 2)'>
 	^(traceFlags bitAnd: 2) ~= 0
+]
+
+{ #category : #'live-typing initialization' }
+Cogit >> registerMask: regMask contains: reg [
+	<inline: true>
+	^(((1 << reg) bitAnd: regMask) = 0) not
 ]
 
 { #category : #'register management' }
