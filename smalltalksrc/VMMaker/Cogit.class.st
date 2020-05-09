@@ -5314,14 +5314,7 @@ Cogit >> compileCallFor: aRoutine numArgs: numArgs arg: regOrConst0 arg: regOrCo
 	cStackAlignment > objectMemory wordSize ifTrue:
 		[backEnd
 			genAlignCStackSavingRegisters: regsToSave
-			numArgs: (alignStack ifTrue: [ numArgs ] ifFalse: [ |argsToSendToStack|
-				argsToSendToStack := numArgs.
-				(self registerMask: regMask contains: regOrConst0) ifTrue: [ argsToSendToStack := argsToSendToStack - 1].
-				(self registerMask: regMask contains: regOrConst1) ifTrue: [ argsToSendToStack := argsToSendToStack - 1].
-				(self registerMask: regMask contains: regOrConst2) ifTrue: [ argsToSendToStack := argsToSendToStack - 1].
-				(self registerMask: regMask contains: regOrConst3) ifTrue: [ argsToSendToStack := argsToSendToStack - 1].
-				argsToSendToStack
-			])
+			numArgs: (alignStack ifTrue: [ numArgs ] ifFalse: [ 0 ])
 			wordAlignment: cStackAlignment / objectMemory wordSize].
 	backEnd
 		genSaveRegs: regsToSave;
