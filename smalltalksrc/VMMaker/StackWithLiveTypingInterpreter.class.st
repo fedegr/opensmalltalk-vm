@@ -203,6 +203,22 @@ StackWithLiveTypingInterpreter >> keepTypeInformationIn: types for: anAssignedOb
 	
 ]
 
+{ #category : #printing }
+StackWithLiveTypingInterpreter >> printHello [
+	<inline: false>
+	
+	self cCode: 'printf("hello!!");'.
+
+]
+
+{ #category : #printing }
+StackWithLiveTypingInterpreter >> printReceiver: receiver [
+	<inline: false>
+	
+	self printOop: receiver.
+
+]
+
 { #category : #'return bytecodes' }
 StackWithLiveTypingInterpreter >> returnFalse [
 	localReturnValue := objectMemory falseObject.
