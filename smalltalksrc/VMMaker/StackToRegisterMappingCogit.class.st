@@ -11394,10 +11394,12 @@ StackToRegisterMappingCogit >> genPrintHelloStorePop: popBoolean ReceiverVariabl
 StackToRegisterMappingCogit >> genPrintReceiver [
 	<inline: true>
 
-   "self voidReceiverResultRegContainsSelf.
+   "
+	self voidReceiverResultRegContainsSelf.
 	self ssAllocateCallReg: ReceiverResultReg.
 
-	self CallRT: cePrintReceiverTrampoline."
+	self CallRT: cePrintReceiverTrampoline.
+	"
 	
 	self ssFlushAll.
 	self putSelfInReceiverResultReg.
@@ -12064,7 +12066,14 @@ StackToRegisterMappingCogit >> genStorePop: popBoolean MaybeContextRemoteInstVar
 StackToRegisterMappingCogit >> genStorePop: popBoolean ReceiverVariable: slotIndex [
 	<inline: true>
 	"self genPrintHelloStorePop: popBoolean ReceiverVariable: slotIndex."
-	self genPrintReceiver.
+	"self genPrintReceiver."
+	
+	
+	self ssFlushAll.
+	self putSelfInReceiverResultReg.
+	self CallRT: cePrintReceiverTrampoline.
+	self putSelfInReceiverResultReg.
+	
 	
 	^self 
 		genStorePop: popBoolean 
