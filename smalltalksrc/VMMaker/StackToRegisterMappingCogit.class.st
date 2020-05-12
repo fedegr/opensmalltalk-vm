@@ -12071,13 +12071,10 @@ StackToRegisterMappingCogit >> genStorePop: popBoolean ReceiverVariable: slotInd
 StackToRegisterMappingCogit >> genStorePop: popBoolean ReceiverVariable: slotIndex needsStoreCheck: needsStoreCheck needsImmutabilityCheck: needsImmCheck [
 	<inline: false>
 	
-	self ssFlushAll.
-	self putSelfInReceiverResultReg.
-	self CallRT: ceTestTrampolineWithReceiverArgument.
-	self putSelfInReceiverResultReg.
-	"self voidReceiverResultRegContainsSelf."
-	"self ssFlushUpThroughReceiverVariable: slotIndex."
-	"self ensureReceiverResultRegContainsSelf."
+	"self ssFlushAll."
+	"self putSelfInReceiverResultReg."
+	"self CallRT: ceTestTrampolineWithReceiverArgument."
+	"self putSelfInReceiverResultReg."
 
 	"In two path compilation the receiver is young AND mutable, hence no store check nor immutability check is needed"
 	^self 
