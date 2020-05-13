@@ -21,6 +21,10 @@ StackWithLiveTypingInterpreter >> additionalMethodStateOf: methodPointer [
 StackWithLiveTypingInterpreter >> extendedStoreBytecodePop: popBoolean [
 	| descriptor variableType variableIndex value rcvr |
 	<inline: true>
+	
+	"Test print with 2 parameters (STACK)"
+	self printNumber: 1 and: 2. 
+	
 	descriptor := self fetchByte.
 	variableType := descriptor >> 6 bitAnd: 3.
 	variableIndex := descriptor bitAnd: 63.
@@ -208,6 +212,15 @@ StackWithLiveTypingInterpreter >> printHello [
 	<inline: false>
 	
 	self cCode: 'printf("hello!!");'.
+
+]
+
+{ #category : #printing }
+StackWithLiveTypingInterpreter >> printNumber: number1 and: number2 [
+	<inline: false>
+	
+	self printNum: number1.
+	self printNum: number2.
 
 ]
 
