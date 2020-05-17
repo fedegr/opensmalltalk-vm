@@ -271,7 +271,8 @@ Class {
 		'cogConstituentIndex',
 		'directedSendUsesBinding',
 		'cePrintHelloTrampoline',
-		'cePrintReceiverTrampoline'
+		'cePrintReceiverTrampoline',
+		'cePrintNumberAndNumber'
 	],
 	#classVars : [
 		'AltBlockCreationBytecodeSize',
@@ -1209,7 +1210,7 @@ Cogit class >> notesAndQueries [
 
 { #category : #'live-typing accessing' }
 Cogit class >> numLiveTypingTrampolines [
-	^2.
+	^3.
 ]
 
 { #category : #'live-typing accessing' }
@@ -7953,6 +7954,26 @@ Cogit >> genTrampolineFor: aRoutine called: aString regsToSave: regMask [
 ]
 
 { #category : #initialization }
+Cogit >> genTrampolineWithoutStackAlignFor: aRoutine  called: aString arg: regOrConst0 arg: regOrConst1 regsToSave: regMask [
+	"Generate a trampoline with one argument.
+	 Hack: a negative value indicates an abstract register, a non-negative value indicates a constant."
+	<var: #aRoutine type: #'void *'>
+	<var: #aString type: #'char *'>
+	^self
+		genTrampolineWithoutStackAlignFor: aRoutine
+		called: aString
+		numArgs: 2
+		arg: regOrConst0
+		arg: regOrConst1
+		arg: nil
+		arg: nil
+		regsToSave: regMask
+		pushLinkReg: true
+		resultReg: NoReg
+		appendOpcodes: false
+]
+
+{ #category : #initialization }
 Cogit >> genTrampolineWithoutStackAlignFor: aRoutine  called: aString arg: regOrConst0 regsToSave: regMask [
 	"Generate a trampoline with one argument.
 	 Hack: a negative value indicates an abstract register, a non-negative value indicates a constant."
@@ -8244,10 +8265,17 @@ Cogit >> generateLiveTypingTrampolines [
 												called: 'cePrintHelloTrampoline'
 												regsToSave: CallerSavedRegisterMask.
 	
-	cePrintReceiverTrampoline := self genTrampolineFor: #cePrintReceiver:
+	cePrintReceiverTrampoline := self genTrampolineWithoutStackAlignFor: #cePrintReceiver:
 												called: 'cePrintReceiverTrampoline'
 												arg: ReceiverResultReg
 												regsToSave: CallerSavedRegisterMask.
+												
+	cePrintNumberAndNumber := self genTrampolineWithoutStackAlignFor: #cePrintNumber:and:
+											called: 'cePrintNumberAndNumber'
+											arg: Arg0Reg 
+											arg: Arg1Reg 
+											regsToSave: CallerSavedRegisterMask.
+											
 ]
 
 { #category : #'method map' }

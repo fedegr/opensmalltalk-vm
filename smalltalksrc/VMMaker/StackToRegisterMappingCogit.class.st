@@ -11390,6 +11390,15 @@ StackToRegisterMappingCogit >> genPrintHelloStorePop: popBoolean ReceiverVariabl
 	self CallRT: cePrintHelloTrampoline.
 ]
 
+{ #category : #'live-typing primitive generators' }
+StackToRegisterMappingCogit >> genPrintNumber: number1 ReceiverVariable: number2 [ 
+	<inline: true>
+	
+	self MoveCw: number1 R: Arg0Reg.
+	self MoveCw: number2 R: Arg0Reg.
+	self CallRT: cePrintNumberAndNumber.
+]
+
 { #category : #'bytecode generator support' }
 StackToRegisterMappingCogit >> genPrintReceiver [
 
@@ -12057,7 +12066,8 @@ StackToRegisterMappingCogit >> genStorePop: popBoolean MaybeContextRemoteInstVar
 StackToRegisterMappingCogit >> genStorePop: popBoolean ReceiverVariable: slotIndex [
 	<inline: true>
 	"self genPrintHelloStorePop: popBoolean ReceiverVariable: slotIndex."
-	self genPrintReceiver.
+	"self genPrintReceiver."
+	self genPrintNumber: 0 ReceiverVariable: slotIndex.
 	
 	^self 
 		genStorePop: popBoolean 
