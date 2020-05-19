@@ -12,6 +12,12 @@ CoInterpreterWithLiveTyping >> cePrintHello [
 ]
 
 { #category : #trampolines }
+CoInterpreterWithLiveTyping >> cePrintNumber: aNumber and: anotherNumber [
+	<api>
+	self cCode: 'printf("%d %d", (long)integerValueOf(oop));'.
+]
+
+{ #category : #trampolines }
 CoInterpreterWithLiveTyping >> cePrintObject: anOop [
 	<api>
 	
