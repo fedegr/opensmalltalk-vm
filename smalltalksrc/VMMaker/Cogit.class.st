@@ -8244,7 +8244,7 @@ Cogit >> generateLiveTypingTrampolines [
 												called: 'cePrintHelloTrampoline'
 												regsToSave: CallerSavedRegisterMask.
 	
-	cePrintReceiverTrampoline := self genTrampolineFor: #cePrintReceiver:
+	cePrintReceiverTrampoline := self genTrampolineWithoutStackAlignFor: #cePrintReceiver:
 												called: 'cePrintReceiverTrampoline'
 												arg: ReceiverResultReg
 												regsToSave: CallerSavedRegisterMask.
