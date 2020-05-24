@@ -12059,7 +12059,10 @@ StackToRegisterMappingCogit >> genStorePop: popBoolean MaybeContextRemoteInstVar
 StackToRegisterMappingCogit >> genStorePop: popBoolean ReceiverVariable: slotIndex [
 	<inline: true>
 	"self genPrintHelloStorePop: popBoolean ReceiverVariable: slotIndex."
-	self genPrintReceiver.
+	self ssFlushAll.
+	self putSelfInReceiverResultReg.
+	self CallRT: cePrintReceiverTrampoline.
+	self putSelfInReceiverResultReg.
 	
 	^self 
 		genStorePop: popBoolean 
