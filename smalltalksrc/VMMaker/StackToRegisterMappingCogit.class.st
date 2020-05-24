@@ -11393,10 +11393,11 @@ StackToRegisterMappingCogit >> genPrintHelloStorePop: popBoolean ReceiverVariabl
 { #category : #'bytecode generator support' }
 StackToRegisterMappingCogit >> genPrintReceiver [
 
-	self voidReceiverResultRegContainsSelf.
-	self ssAllocateCallReg: ReceiverResultReg.
-	"self CallRT: ceTestTrampolineWithReceiverArgument."
+	self ssFlushAll.
+	self putSelfInReceiverResultReg.
 	self CallRT: cePrintReceiverTrampoline.
+	self putSelfInReceiverResultReg.
+	
 ]
 
 { #category : #'bytecode generators' }
