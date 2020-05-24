@@ -3667,10 +3667,11 @@ SimpleStackBasedCogit >> genUpArrowReturn [
 { #category : #initialization }
 SimpleStackBasedCogit >> generateLiveTypingTrampolines [
 	"Generate trampolines for livetyping"
+	super generateLiveTypingTrampolines.
 	ceTestTrampolineWithReceiverArgument :=
 		self
 			genTrampolineWithoutStackAlignFor: #cePrintObject:
-			called: 'toto'
+			called: 'ceTestTrampolineWithReceiverArgument'
 			arg: ReceiverResultReg
 			regsToSave: CallerSavedRegisterMask.
 ]

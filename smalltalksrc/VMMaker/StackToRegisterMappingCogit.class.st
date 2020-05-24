@@ -11383,12 +11383,21 @@ StackToRegisterMappingCogit >> genPrimitivePerform [
 	^self genLookupForPerformNumArgs: methodOrBlockNumArgs
 ]
 
+{ #category : #'live-typing primitive generators' }
+StackToRegisterMappingCogit >> genPrintHelloStorePop: popBoolean ReceiverVariable: slotIndex [
+	<inline: true>
+
+	self CallRT: cePrintHelloTrampoline.
+]
+
 { #category : #'bytecode generator support' }
 StackToRegisterMappingCogit >> genPrintReceiver [
 
-	self voidReceiverResultRegContainsSelf.
-	self ssAllocateCallReg: ReceiverResultReg.
-	self CallRT: ceTestTrampolineWithReceiverArgument.
+	self ssFlushAll.
+	self putSelfInReceiverResultReg.
+	self CallRT: cePrintReceiverTrampoline.
+	self putSelfInReceiverResultReg.
+	
 ]
 
 { #category : #'bytecode generators' }
@@ -12046,9 +12055,15 @@ StackToRegisterMappingCogit >> genStorePop: popBoolean MaybeContextRemoteInstVar
 		needsImmutabilityCheck: needsImmCheck
 ]
 
-{ #category : #'bytecode generator stores' }
+{ #category : #'live-typing bytecode generator stores' }
 StackToRegisterMappingCogit >> genStorePop: popBoolean ReceiverVariable: slotIndex [
 	<inline: true>
+	"self genPrintHelloStorePop: popBoolean ReceiverVariable: slotIndex."
+	self ssFlushAll.
+	self putSelfInReceiverResultReg.
+	self CallRT: cePrintReceiverTrampoline.
+	self putSelfInReceiverResultReg.
+	
 	^self 
 		genStorePop: popBoolean 
 		ReceiverVariable: slotIndex 
@@ -12061,13 +12076,10 @@ StackToRegisterMappingCogit >> genStorePop: popBoolean ReceiverVariable: slotInd
 StackToRegisterMappingCogit >> genStorePop: popBoolean ReceiverVariable: slotIndex needsStoreCheck: needsStoreCheck needsImmutabilityCheck: needsImmCheck [
 	<inline: false>
 	
-	self ssFlushAll.
-	self putSelfInReceiverResultReg.
-	self CallRT: ceTestTrampolineWithReceiverArgument.
-	self putSelfInReceiverResultReg.
-	"self voidReceiverResultRegContainsSelf."
-	"self ssFlushUpThroughReceiverVariable: slotIndex."
-	"self ensureReceiverResultRegContainsSelf."
+	"self ssFlushAll."
+	"self putSelfInReceiverResultReg."
+	"self CallRT: ceTestTrampolineWithReceiverArgument."
+	"self putSelfInReceiverResultReg."
 
 	"In two path compilation the receiver is young AND mutable, hence no store check nor immutability check is needed"
 	^self 
