@@ -1217,7 +1217,6 @@ Cogit class >> numTrampolines [
 	^39 "31 + 4 each for self and super sends"
 		+ (LowcodeVM ifTrue: [1] ifFalse: [0])
 		+ (COGMTVM ifTrue: [ 2 ] ifFalse: [ 0 ])
-		+ 1 "Trampoline test"
 		+ self numLiveTypingTrampolines
 
 	"self withAllSubclasses collect: [:c| {c. (c instVarNames select: [:ea| ea beginsWith: 'ce']) size}]"
@@ -8244,7 +8243,7 @@ Cogit >> generateLiveTypingTrampolines [
 												called: 'cePrintHelloTrampoline'
 												regsToSave: CallerSavedRegisterMask.
 	
-	cePrintReceiverTrampoline := self genTrampolineFor: #cePrintReceiver:
+	cePrintReceiverTrampoline := self genTrampolineWithoutStackAlignFor: #cePrintReceiver:
 												called: 'cePrintReceiverTrampoline'
 												arg: ReceiverResultReg
 												regsToSave: CallerSavedRegisterMask.

@@ -3665,17 +3665,6 @@ SimpleStackBasedCogit >> genUpArrowReturn [
 ]
 
 { #category : #initialization }
-SimpleStackBasedCogit >> generateLiveTypingTrampolines [
-	"Generate trampolines for livetyping"
-	ceTestTrampolineWithReceiverArgument :=
-		self
-			genTrampolineWithoutStackAlignFor: #cePrintObject:
-			called: 'ceTestTrampolineWithReceiverArgument'
-			arg: ReceiverResultReg
-			regsToSave: CallerSavedRegisterMask.
-]
-
-{ #category : #initialization }
 SimpleStackBasedCogit >> generateMissAbortTrampolines [
 	"Generate the run-time entries for the various method and PIC entry misses and aborts.
 	 Read the class-side method trampolines for documentation on the various trampolines"

@@ -11395,7 +11395,7 @@ StackToRegisterMappingCogit >> genPrintReceiver [
 
 	self voidReceiverResultRegContainsSelf.
 	self ssAllocateCallReg: ReceiverResultReg.
-	self CallRT: ceTestTrampolineWithReceiverArgument.
+	self CallRT: cePrintReceiverTrampoline.
 ]
 
 { #category : #'bytecode generators' }
