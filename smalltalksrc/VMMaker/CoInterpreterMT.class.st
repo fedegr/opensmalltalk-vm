@@ -1,6 +1,6 @@
 Class {
 	#name : #CoInterpreterMT,
-	#superclass : #CoInterpreterPrimitives,
+	#superclass : #CoInterpreterWithLiveTyping,
 	#instVars : [
 		'cogThreadManager',
 		'checkThreadActivation',

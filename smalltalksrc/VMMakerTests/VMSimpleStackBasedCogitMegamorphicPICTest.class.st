@@ -51,6 +51,7 @@ VMSimpleStackBasedCogitMegamorphicPICTest >> testMiss [
 	numArgs := 0.
 	createdPic := cogit cogOpenPICSelector: selector numArgs: numArgs.
 	
+	self halt.
 	cogit setCFramePointer: machineSimulator framePointerRegisterValue.
 	cogit setCStackPointer: machineSimulator stackPointerRegisterValue.
 	

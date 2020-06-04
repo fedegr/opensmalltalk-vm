@@ -73,6 +73,11 @@ VMSimpleStackBasedCogitAbstractTest >> assertStackRemainsUnchangedDuring: aBlock
 ]
 
 { #category : #helpers }
+VMSimpleStackBasedCogitAbstractTest >> cogitClass [
+	^ SimpleStackBasedCogit.
+]
+
+{ #category : #helpers }
 VMSimpleStackBasedCogitAbstractTest >> compile: aBlockClosure [ 
 	"Compiles some native code using the code inside the block closure as builder.
 	This version assumes the block has a single 1-bytecode statement 
@@ -598,10 +603,12 @@ VMSimpleStackBasedCogitAbstractTest >> runUntilReturnFrom: anAddress [
 
 { #category : #running }
 VMSimpleStackBasedCogitAbstractTest >> setUp [
+	|temp|
 	super setUp.
 	
-	SimpleStackBasedCogit initializeWithOptions: (Cogit asOptionsDictionary: { #ISA . isa }).
-	cogit := SimpleStackBasedCogit new setInterpreter: memory coInterpreter.
+	temp := self cogitClass.
+	temp initializeWithOptions: (Cogit asOptionsDictionary: { #ISA . isa }).
+	cogit := temp new setInterpreter: memory coInterpreter.
 	memory coInterpreter cogit: cogit.
 	memory cogit: cogit.
 	cogit objectRepresentation class initializeMiscConstants.

@@ -269,7 +269,10 @@ Class {
 		'debugOpcodeIndices',
 		'disassemblingMethod',
 		'cogConstituentIndex',
-		'directedSendUsesBinding'
+		'directedSendUsesBinding',
+		'cePrintHelloTrampoline',
+		'cePrintReceiverTrampoline',
+		'ceKeepInstanceVariableTypeTrampoline'
 	],
 	#classVars : [
 		'AltBlockCreationBytecodeSize',
@@ -7994,6 +7997,26 @@ Cogit >> genTrampolineFor: aRoutine called: aString regsToSave: regMask [
 ]
 
 { #category : #initialization }
+Cogit >> genTrampolineWithoutStackAlignFor: aRoutine  called: aString arg: regOrConst0  arg: regOrConst1 arg: regOrConst2 regsToSave: regMask [
+	"Generate a trampoline with one argument.
+	 Hack: a negative value indicates an abstract register, a non-negative value indicates a constant."
+	<var: #aRoutine type: #'void *'>
+	<var: #aString type: #'char *'>
+	^self
+		genTrampolineWithoutStackAlignFor: aRoutine
+		called: aString
+		numArgs: 3
+		arg: regOrConst0
+		arg: regOrConst1
+		arg: regOrConst2
+		arg: nil
+		regsToSave: regMask
+		pushLinkReg: true
+		resultReg: NoReg
+		appendOpcodes: false
+]
+
+{ #category : #initialization }
 Cogit >> genTrampolineWithoutStackAlignFor: aRoutine  called: aString arg: regOrConst0 regsToSave: regMask [
 	"Generate a trampoline with one argument.
 	 Hack: a negative value indicates an abstract register, a non-negative value indicates a constant."
@@ -8288,6 +8311,13 @@ Cogit >> generateLiveTypingTrampolines [
 	cePrintReceiverTrampoline := self genTrampolineWithoutStackAlignFor: #cePrintReceiver:
 												called: 'cePrintReceiverTrampoline'
 												arg: ReceiverResultReg
+												regsToSave: CallerSavedRegisterMask.
+												
+	ceKeepInstanceVariableTypeTrampoline := self genTrampolineWithoutStackAlignFor: #keepInstanceVariableTypeInformationFor:in:at:
+												called: 'ceKeepInstanceVariableTypeTrampoline'
+												arg: 1
+												arg: 2
+												arg: 3
 												regsToSave: CallerSavedRegisterMask.
 ]
 
@@ -9185,6 +9215,13 @@ Cogit >> isTrampolineArgConstant: n [
 	"Test for true and false and 0 to N encoded via trampolineArgConstant:"
 	<inline: true>
 	^n < NoReg
+]
+
+{ #category : #'live-typing' }
+Cogit >> keepInstanceVariableTypeTrampoline [
+	<doNotGenerate>
+	
+	^ ceKeepInstanceVariableTypeTrampoline.
 ]
 
 { #category : #disassembly }

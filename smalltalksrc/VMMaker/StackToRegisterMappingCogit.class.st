@@ -12059,7 +12059,7 @@ StackToRegisterMappingCogit >> genStorePop: popBoolean MaybeContextRemoteInstVar
 { #category : #'live-typing bytecode generator stores' }
 StackToRegisterMappingCogit >> genStorePop: popBoolean ReceiverVariable: slotIndex [
 	<inline: true>
-	"self genPrintHelloStorePop: popBoolean ReceiverVariable: slotIndex."
+	self halt.
 	self genPrintReceiver.
 	
 	^self 
@@ -14190,6 +14190,17 @@ StackToRegisterMappingCogit >> updateSimSpillBase [
 		[:i|
 		self assert: (self simStackAt: i) spilled == true].
 	self assert: (simSpillBase > simStackPtr or: [(self simStackAt: simSpillBase) spilled == false])
+]
+
+{ #category : #accessing }
+StackToRegisterMappingCogit >> useTwoPaths [
+	^ useTwoPaths
+]
+
+{ #category : #accessing }
+StackToRegisterMappingCogit >> useTwoPaths: anObject [
+	<doNotGenerate>
+	^ useTwoPaths := anObject
 ]
 
 { #category : #'span functions' }
