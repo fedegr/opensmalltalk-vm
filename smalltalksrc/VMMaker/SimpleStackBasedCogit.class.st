@@ -862,6 +862,12 @@ SimpleStackBasedCogit >> cPICMissTrampolineFor: numArgs [
 	^ceCPICMissTrampoline
 ]
 
+{ #category : #accessing }
+SimpleStackBasedCogit >> ceCPICMissTrampoline: anAddress [ 
+	
+	ceCPICMissTrampoline := anAddress
+]
+
 { #category : #trampolines }
 SimpleStackBasedCogit >> ceClosureCopyDescriptor: descriptor [ "<Integer>" 
 	^coInterpreter
@@ -1644,6 +1650,12 @@ SimpleStackBasedCogit >> duplicateTopBytecode [
 	^0
 ]
 
+{ #category : #'*VMMaker-Tests' }
+SimpleStackBasedCogit >> entryOffset: anInteger [ 
+	<doNotGenerate>
+	cmEntryOffset := anInteger
+]
+
 { #category : #'trampoline support' }
 SimpleStackBasedCogit >> evaluateTrampolineCallBlock: block protectLinkRegIfNot: inFrame [
 	<inline: true>
@@ -2259,7 +2271,7 @@ SimpleStackBasedCogit >> genInlinedIdenticalOrNotIf: orNot [
 		genEnsureOopInRegNotForwarded: ClassReg
 		scratchReg: TempReg.
 	self CmpR: Arg0Reg R: ClassReg.
-	jumpNotEqual := self genConditionalBranch: (orNot ifTrue: [JumpZero] ifFalse: [JumpZero]) operand: 0.
+	jumpNotEqual := self genConditionalBranch: (orNot ifTrue: [JumpZero] ifFalse: [JumpNonZero]) operand: 0.
 	self annotate: (self genMoveTrueR: Arg0Reg)
 		objRef: objectMemory trueObject.
 	jumpPush := self Jump: 0.
@@ -3206,6 +3218,7 @@ SimpleStackBasedCogit >> genSend: selectorIndex numArgs: numArgs sendTable: send
 			and: IsDirectedSuperBindingSend]) ifTrue:
 		[self genMoveConstant: tempOop R: TempReg].
 	self genLoadInlineCacheWithSelector: selectorIndex.
+
 	(self Call: (sendTable at: (numArgs min: NumSendTrampolines - 1))) annotation: annotation.
 	self PushR: ReceiverResultReg.
 	^0
@@ -3533,7 +3546,7 @@ SimpleStackBasedCogit >> genStorePop: popBoolean ReceiverVariable: slotIndex [
 	popBoolean
 		ifTrue: [self PopR: ClassReg]
 		ifFalse: [self MoveMw: 0 r: SPReg R: ClassReg].
-	self
+	objectRepresentation
 		genStoreSourceReg: ClassReg 
 		slotIndex: slotIndex 
 		destReg: ReceiverResultReg 
@@ -3825,6 +3838,13 @@ SimpleStackBasedCogit >> methodUsesPrimitiveErrorCode: aMethodObj header: aMetho
 			= (objectMemory
 				fetchByte: (coInterpreter startPCOfMethod: aMethodObj) + (coInterpreter sizeOfCallPrimitiveBytecode: aMethodHeader)
 				ofObject: aMethodObj)]
+]
+
+{ #category : #accessing }
+SimpleStackBasedCogit >> minCallAddress: anInteger [ 
+	<doNotGenerate>
+
+	minValidCallAddress:=anInteger
 ]
 
 { #category : #testing }

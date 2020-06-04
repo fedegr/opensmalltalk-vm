@@ -10,14 +10,25 @@ BaselineOfVMMaker >> baseline: spec [
 	spec
 		for: #common
 		do: [
+			
+			spec baseline: 'Unicorn' with: [ 
+				spec repository: 'github://guillep/pharo-unicorn' ].
+			spec baseline: 'LLVMDisassembler' with: [ 
+				spec repository: 'github://guillep/pharo-llvmDisassembler' ].
+			
+			spec
+				package: 'VMMakerTests' with: [
+					spec requires: #('VMMakerCompatibilityForPharo6' 'Unicorn' 'LLVMDisassembler') ].
+				
+			spec package: 'VMMaker-Tools' with: [ 
+				spec requires: #( 'VMMakerCompatibilityForPharo6' 'VMMakerTests' ) ].
+			
 			"Initial VMMaker package for handling Pharo 6" 
 			spec
 				package: 'VMMakerTests' with: [
 					spec requires: 'VMMakerCompatibilityForPharo6' ].
 			spec
-				package: 'VMMakerCompatibilityForPharo6'
-				with: [ spec requires: 'VMMaker' ];
-				package: 'VMMakerLoadingDependencies'.
+				package: 'VMMakerCompatibilityForPharo6'.
 			
 			"Dependencies from other repositories"
 			spec
@@ -34,7 +45,7 @@ BaselineOfVMMaker >> baseline: spec [
 			spec
 				package: 'Balloon-Engine-Pools';
 				package: 'BytecodeSets';
-				package: 'VMMaker' with: [ spec requires: #( 'VMMakerLoadingDependencies' 'Printf') ];
+				package: 'VMMaker' with: [ spec requires: #( 'VMMakerCompatibilityForPharo6' 'Printf') ];
 				package: 'Cog';
 				package: 'CogTools';
 				package: 'ImageFormat'.
@@ -63,5 +74,5 @@ BaselineOfVMMaker >> baseline: spec [
 			spec
 				package: 'AndreasProfiler' with: [
 					spec repository: 'http://ss3.gemstone.com/ss/AndreasSystemProfiler'].
-			spec group: 'default' with: #('VMMaker' 'VMMakerTests') ]
+			spec group: 'default' with: #('VMMaker' 'VMMakerTests' 'VMMaker-Tools') ]
 ]

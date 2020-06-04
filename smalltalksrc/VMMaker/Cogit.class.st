@@ -269,9 +269,7 @@ Class {
 		'debugOpcodeIndices',
 		'disassemblingMethod',
 		'cogConstituentIndex',
-		'directedSendUsesBinding',
-		'cePrintHelloTrampoline',
-		'cePrintReceiverTrampoline'
+		'directedSendUsesBinding'
 	],
 	#classVars : [
 		'AltBlockCreationBytecodeSize',
@@ -1037,11 +1035,7 @@ Cogit class >> initializeMiscConstants [
 			[EagerInstructionDecoration ifNil:
 				[EagerInstructionDecoration := false]]. "speeds up single stepping but could lose fidelity"
 
-	ProcessorClass := (InitializationOptions at: #ISA ifAbsentPut: [self objectMemoryClass defaultISA]) caseOf: {
-							[#X64] 		->	[BochsX64Alien].
-							[#IA32] 	->	[BochsIA32Alien].
-							[#ARMv5]	->	[GdbARMAlien].
-							[#MIPSEL]	->	[MIPSELSimulator] }.
+	ProcessorClass := InitializationOptions at: #ProcessorClass ifAbsentPut: [ UnicornProcessor ].
 	CogCompilerClass := self activeCompilerClass.
 	(CogCompilerClass withAllSuperclasses copyUpTo: CogAbstractInstruction) reverseDo:
 		[:compilerClass| compilerClass initialize; initializeAbstractRegisters].
@@ -3342,6 +3336,12 @@ Cogit >> backEnd [
 	^backEnd
 ]
 
+{ #category : #accessing }
+Cogit >> backend [
+	<doNotGenerate>
+	^ backEnd
+]
+
 { #category : #'tests-method map' }
 Cogit >> bcpcsAndDescriptorsFor: aMethod bsOffset: bsOffset do: quaternaryBlock [
 	"Evaluate quaternaryBlock with the pc, byte, descriptor and numExtensions for
@@ -3585,6 +3585,12 @@ Cogit >> breakPC: anAddressArrayOrNil [
 	<doNotGenerate>
 	breakPC := anAddressArrayOrNil.
 	singleStep := singleStep or: [anAddressArrayOrNil singleStepRequiredToTriggerIn: self]
+]
+
+{ #category : #accessing }
+Cogit >> byte1: anInteger [
+	<doNotGenerate>
+	byte1 := anInteger
 ]
 
 { #category : #'simulation only' }
@@ -3894,6 +3900,11 @@ Cogit >> ceCPICMiss: cPIC receiver: receiver [
 	^nil
 ]
 
+{ #category : #accessing }
+Cogit >> ceCPICMissTrampoline [
+	^ ceCPICMissTrampoline
+]
+
 { #category : #'simulation only' }
 Cogit >> ceCallCogCodePopReceiverAndClassRegs [
 	<api: 'extern void (*ceCallCogCodePopReceiverAndClassRegs)()'>
@@ -3959,6 +3970,30 @@ Cogit >> ceMalloc: size [
 	<var: #size type: #'size_t'>
 	<returnTypeC: #'void*'>
 	^ self malloc: size
+]
+
+{ #category : #accessing }
+Cogit >> ceMethodAbortTrampoline [
+	<doNotGenerate>
+	^ ceMethodAbortTrampoline
+]
+
+{ #category : #accessing }
+Cogit >> ceMethodAbortTrampoline: anInteger [ 
+	<doNotGenerate>
+	ceMethodAbortTrampoline := anInteger
+]
+
+{ #category : #accessing }
+Cogit >> cePICAbortTrampoline [
+	<doNotGenerate>
+	^ cePICAbortTrampoline
+]
+
+{ #category : #accessing }
+Cogit >> cePICAbortTrampoline: anInteger [ 
+	<doNotGenerate>
+	cePICAbortTrampoline := anInteger
 ]
 
 { #category : #accessing }
@@ -4548,6 +4583,13 @@ Cogit >> cogBlockMethodSurrogateClass [
 Cogit >> cogCodeBase [
 	<api>
 	^codeBase
+]
+
+{ #category : #accessing }
+Cogit >> cogCodeBase: anInteger [ 
+	<doNotGenerate>
+	codeBase := anInteger
+	
 ]
 
 { #category : #'profiling primitives' }
@@ -8766,8 +8808,9 @@ Cogit >> handleWriteSimulationTrap: aProcessorSimulationTrap [
 	| variableValue |
 	(self addressIsInCodeZone: aProcessorSimulationTrap address) ifTrue:
 		[self error: 'attempt to write to code space'].
-	variableValue := processor perform: aProcessorSimulationTrap registerAccessor.
+	variableValue := aProcessorSimulationTrap writtenValue.
 	(simulatedVariableSetters at: aProcessorSimulationTrap address) value: variableValue.
+
 	processor pc: aProcessorSimulationTrap nextpc
 ]
 
@@ -10218,6 +10261,12 @@ Cogit >> maxCogMethodAddress [
 	^methodZone limitZony asUnsignedInteger
 ]
 
+{ #category : #accessing }
+Cogit >> maxLitIndex: anInteger [ 
+	<doNotGenerate>
+	maxLitIndex := anInteger
+]
+
 { #category : #'compile abstract instructions' }
 Cogit >> maybeAllocAndInitCounters [
 	"No-op in the non-Sista Cogits..."
@@ -10488,6 +10537,18 @@ Cogit >> methodNumArgs [
 ]
 
 { #category : #accessing }
+Cogit >> methodObj [
+	<doNotGenerate>
+	^ methodObj
+]
+
+{ #category : #accessing }
+Cogit >> methodObj: anObject [
+	<doNotGenerate>
+	methodObj := anObject
+]
+
+{ #category : #accessing }
 Cogit >> methodZone [
 	^methodZone
 ]
@@ -10496,6 +10557,12 @@ Cogit >> methodZone [
 Cogit >> methodZoneBase [
 	<cmacro: '() methodZoneBase'>
 	^methodZoneBase
+]
+
+{ #category : #'*VMMaker-Tests' }
+Cogit >> methodZoneBase: anInteger [ 
+	<doNotGenerate>
+	methodZoneBase := anInteger
 ]
 
 { #category : #accessing }
@@ -10508,6 +10575,12 @@ Cogit >> minCallAddress [
 Cogit >> minCogMethodAddress [
 	<api>
 	^methodZoneBase
+]
+
+{ #category : #accessing }
+Cogit >> missOffset [
+	<doNotGenerate>
+	^ missOffset
 ]
 
 { #category : #'in-line cacheing' }
@@ -10753,6 +10826,19 @@ Cogit >> opcodePrintStringFrom: startIndex to: stopIndex [
 		startIndex to: stopIndex do:
 			[:i|
 			(abstractOpcodes at: i) printStateOn: s]]) allButFirst
+]
+
+{ #category : #accessing }
+Cogit >> openPICSize [
+	<doNotGenerate>
+	^ openPICSize
+]
+
+{ #category : #accessing }
+Cogit >> ordinarySendTrampolineAt: anInteger put: aTrampolineAddress [ 
+	<doNotGenerate>
+	
+	ordinarySendTrampolines at: anInteger put: aTrampolineAddress
 ]
 
 { #category : #'generate machine code' }

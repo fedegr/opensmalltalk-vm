@@ -5007,6 +5007,7 @@ StackInterpreter >> closureIn: context numArgs: numArgs instructionPointer: init
 { #category : #'primitive support' }
 StackInterpreter >> codeGeneratorToComputeAccessorDepth [
 	^(VMMaker new
+		beSilent;
 		buildCodeGeneratorForInterpreter: self class primitivesClass
 		includeAPIMethods: false
 		initializeClasses: false)
@@ -9330,7 +9331,7 @@ StackInterpreter >> interpret [
 	self internalizeIPandSP.
 	self initExtensions.
 	self fetchNextBytecode.
-	[true] whileTrue: [self dispatchOn: currentBytecode in: BytecodeTable].
+	[true] whileTrue: [self interpretCurrentByteCode ].
 	localIP := localIP - 1.  "undo the pre-increment of IP before returning"
 	self externalizeIPandSP.
 	^nil
@@ -16470,6 +16471,12 @@ StackInterpreter >> metaclassNumSlots [
 	^metaclassNumSlots
 ]
 
+{ #category : #accessing }
+StackInterpreter >> method: oop [
+	<doNotGenerate>
+	method := oop
+]
+
 { #category : #'plugin primitive support' }
 StackInterpreter >> methodArg: index [
 	"Like #stackValue: but access method arguments left-to-right"
@@ -16841,6 +16848,13 @@ StackInterpreter >> nativeStackSize [
 	^ 4 *1024 * 1024
 ]
 
+{ #category : #accessing }
+StackInterpreter >> newMethod [
+	<doNotGenerate>
+
+	^ newMethod
+]
+
 { #category : #'compiled methods' }
 StackInterpreter >> noAssertHeaderOf: methodPointer [
 	^objectMemory fetchPointer: HeaderIndex ofObject: methodPointer
@@ -16994,7 +17008,6 @@ StackInterpreter >> objectMemory [
 { #category : #initialization }
 StackInterpreter >> objectMemory: anObjectMemory [
 	<doNotGenerate>
-	objectMemory ifNotNil: [self halt].
 	objectMemory := anObjectMemory
 ]
 
@@ -17112,6 +17125,12 @@ StackInterpreter >> ownVM: threadIndexAndFlags [
 	self assert: primFailCode = 0.
 	self push: newMethod.
 	^objectMemory integerObjectOf: argumentCount
+]
+
+{ #category : #accessing }
+StackInterpreter >> pendingFinalizationSignals [
+	<doNotGenerate>
+	^ pendingFinalizationSignals
 ]
 
 { #category : #'debug printing' }
@@ -21097,6 +21116,21 @@ StackInterpreter >> specialSelector: index [
 ]
 
 { #category : #'message sending' }
+StackInterpreter >> specialSelector: index put: aValue [
+	<doNotGenerate>
+	^objectMemory
+		storePointer: (index * 2)
+		ofObject: (objectMemory splObj: SpecialSelectors)
+		withValue: aValue
+]
+
+{ #category : #'message sending' }
+StackInterpreter >> specialSelectorArray: anOop [
+	<doNotGenerate>
+	objectMemory splObj: SpecialSelectors put: anOop
+]
+
+{ #category : #'message sending' }
 StackInterpreter >> specialSelectorNumArgs: index [
 	^objectMemory integerValueOf: (objectMemory fetchPointer: (index * 2) + 1 ofObject: (objectMemory splObj: SpecialSelectors))
 ]
@@ -21313,6 +21347,12 @@ StackInterpreter >> stackPagesClass [
 	^VMBIGENDIAN
 		ifTrue: [InterpreterStackPagesMSB]
 		ifFalse: [InterpreterStackPagesLSB]
+]
+
+{ #category : #accessing }
+StackInterpreter >> stackPointer [
+	<doNotGenerate>
+	^stackPointer
 ]
 
 { #category : #'cog jit support' }

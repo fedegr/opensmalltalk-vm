@@ -35,7 +35,7 @@ Spur32BitMemoryManager class >> numSmallIntegerTagBits [
 
 { #category : #'simulation only' }
 Spur32BitMemoryManager class >> simulatorClass [
-	^Spur32BitMMLESimulator
+	^ Spur32BitMMLESimulator
 ]
 
 { #category : #'word size' }
@@ -742,9 +742,9 @@ Spur32BitMemoryManager >> maxSmallInteger [
 { #category : #simulation }
 Spur32BitMemoryManager >> memoryClass [
 	<doNotGenerate>
-	^self endianness == #little
+	^SpurSimulatedMemory"self endianness == #little
 		ifTrue: [LittleEndianBitmap]
-		ifFalse: [Bitmap]
+		ifFalse: [Bitmap]"
 ]
 
 { #category : #'interpreter access' }

@@ -49,9 +49,7 @@ Spur64BitCoMemoryManager class >> objectRepresentationClass [
 
 { #category : #simulation }
 Spur64BitCoMemoryManager class >> simulatorClass [
-	^Spur64BitMMLECoSimulatorFor64Bits basicNew memoryClass
-		ifNil: [Spur64BitMMLECoSimulator]
-		ifNotNil: [Spur64BitMMLECoSimulatorFor64Bits]
+	^ Spur64BitMMLECoSimulator
 ]
 
 { #category : #'growing/shrinking memory' }
@@ -109,6 +107,13 @@ Spur64BitCoMemoryManager >> clearLeakMapAndMapAccessibleObjects [
 	 Override to set a bit at each Cog method"
 	super clearLeakMapAndMapAccessibleObjects.
 	cogit addCogMethodsToHeapMap
+]
+
+{ #category : #accessing }
+Spur64BitCoMemoryManager >> cogit: aCogit [ 
+	<doNotGenerate>
+
+	cogit := aCogit
 ]
 
 { #category : #'cog jit support' }

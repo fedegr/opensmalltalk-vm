@@ -292,6 +292,13 @@ CCodeGenerator >> addAllClassVarsFor: aClass [
 CCodeGenerator >> addClass: aClass [
 	"Add the variables and methods of the given class to the code base."
 
+	self addClass: aClass silently: false
+]
+
+{ #category : #public }
+CCodeGenerator >> addClass: aClass silently: silentlyBoolean [
+	"Add the variables and methods of the given class to the code base."
+
 	aClass prepareToBeAddedToCodeGenerator: self.
 	self checkClassForNameConflicts: aClass.
 	self addClassVarsFor: aClass.
@@ -301,6 +308,13 @@ CCodeGenerator >> addClass: aClass [
 		[variables addAll: (self instVarNamesForClass: aClass)].
 	self retainMethods: (aClass requiredMethodNames: self options).
 	
+	silentlyBoolean ifTrue: [ 
+		aClass selectors do: [:sel | self addMethodFor: aClass selector: sel ].
+		aClass declareCVarsIn: self.
+		^ self
+	].
+
+	"Not silent"
 	UIManager default
 		displayProgress: 'Adding Class ' , aClass name , '...'
 		from: 0
@@ -308,7 +322,7 @@ CCodeGenerator >> addClass: aClass [
 		during:
 			[:bar |
 			 aClass selectors doWithIndex:
-				[:sel :i | | source |
+				[:sel :i |
 				bar value: i.
 				self addMethodFor: aClass selector: sel]].
 	aClass declareCVarsIn: self
@@ -473,11 +487,26 @@ CCodeGenerator >> addSelectorTranslation: aSelector to: aString [
 CCodeGenerator >> addStructClass: aClass [
 	"Add the non-accessor methods of the given struct class to the code base."
 
+	^ self addStructClass: aClass silently: false
+]
+
+{ #category : #public }
+CCodeGenerator >> addStructClass: aClass silently: silentlyBoolean [
+	"Add the non-accessor methods of the given struct class to the code base."
+
 	aClass prepareToBeAddedToCodeGenerator: self.
 	self addClassVarsFor: aClass.
 	self addPoolVarsFor: aClass.
 	self retainMethods: (aClass requiredMethodNames: self options).
 	
+	"Silent version"
+	silentlyBoolean ifTrue: [
+		aClass selectors do: [:sel | self addStructMethodFor: aClass selector: sel ].
+		aClass declareCVarsIn: self.
+		^ self
+	].
+	
+	"Non silent version"
 	UIManager default
 		displayProgress: 'Adding Class ' , aClass name , '...'
 		from: 0
@@ -485,7 +514,7 @@ CCodeGenerator >> addStructClass: aClass [
 		during:
 			[:bar |
 			 aClass selectors doWithIndex:
-				[:sel :i | | source |
+				[:sel :i |
 				bar value: i.
 				self addStructMethodFor: aClass selector: sel]].
 	aClass declareCVarsIn: self
@@ -500,6 +529,17 @@ CCodeGenerator >> addStructClasses: classes [
 		 (structClass withAllSuperclasses copyUpTo: VMStructType) do:
 			[:structClassOrSuperclass|
 			 self addStructClass: structClassOrSuperclass]]
+]
+
+{ #category : #accessing }
+CCodeGenerator >> addStructClasses: classes silently: aSilentlyBoolean [
+	"Add the struct classes and save them for emitCTypesOn: later."
+	structClasses := classes.
+	structClasses do:
+		[:structClass|
+		 (structClass withAllSuperclasses copyUpTo: VMStructType) do:
+			[:structClassOrSuperclass|
+			 self addStructClass: structClassOrSuperclass silently: aSilentlyBoolean ]]
 ]
 
 { #category : #utilities }
@@ -714,16 +754,17 @@ CCodeGenerator >> cLiteralFor: anObject [
 CCodeGenerator >> cLiteralFor: anObject name: smalltalkName [
 	"Return a string representing the C literal value for the given object.
 	 This version may use hex for integers that are bit masks."
-	anObject isInteger ifTrue:
-		[| hex dec useHexa |
-		hex := anObject printStringBase: 16.
-		dec := anObject printStringBase: 10.
-		useHexa := ((smalltalkName endsWith: 'Mask')
-				or: [anObject digitLength > 1
-					and: [(hex asSet size * 3) <= (dec asSet size * 2)
-					and: [(smalltalkName endsWith: 'Size') not]]]).
-		^self cLiteralForInteger: anObject hex: useHexa].
-	^self cLiteralFor: anObject
+
+	anObject isInteger
+		ifTrue: [ | hex dec useHexa |
+			hex := anObject printStringBase: 16.
+			dec := anObject printStringBase: 10.
+			useHexa := (smalltalkName endsWith: 'Mask')
+				or: [ anObject bytesCount > 1
+						and: [ hex asSet size * 3 <= (dec asSet size * 2)
+								and: [ (smalltalkName endsWith: 'Size') not ] ] ].
+			^ self cLiteralForInteger: anObject hex: useHexa ].
+	^ self cLiteralFor: anObject
 ]
 
 { #category : #'C code generator' }
@@ -5112,18 +5153,21 @@ CCodeGenerator >> shouldIncludeMethodFor: aClass selector: selector [
 	 interpreting the argument to the option: pragma as either a Cogit class name
 	 or a class variable name or a variable name in VMBasicConstants.  Exclude
 	 methods with the doNotGenerate pragma."
+
 	| optionPragmas notOptionPragmas |
-	(aClass >> selector pragmaAt: #doNotGenerate) ifNotNil:
-		[^false].
+	(aClass >> selector pragmaAt: #doNotGenerate) ifNotNil: [ ^ false ].
 
 	"where is pragmasAt: ??"
-	optionPragmas := (aClass >> selector) pragmas select: [:p| p keyword == #option:].
-	notOptionPragmas := (aClass >> selector) pragmas select: [:p| p keyword == #notOption:].
-	(optionPragmas notEmpty or: [notOptionPragmas notEmpty]) ifTrue:
-		[^(optionPragmas allSatisfy: [:pragma| self optionIsTrue: pragma in: aClass])
-		   and: [notOptionPragmas noneSatisfy: [:pragma| self optionIsTrue: pragma in: aClass]]].
-
-	^true
+	optionPragmas := (aClass >> selector) pragmas select: [ :p | 
+		                 p selector == #option: ].
+	notOptionPragmas := (aClass >> selector) pragmas select: [ :p | 
+		                    p selector == #notOption: ].
+	(optionPragmas notEmpty or: [ notOptionPragmas notEmpty ]) ifTrue: [ 
+		^ (optionPragmas allSatisfy: [ :pragma | 
+			   self optionIsTrue: pragma in: aClass ]) and: [ 
+			  notOptionPragmas noneSatisfy: [ :pragma | 
+				  self optionIsTrue: pragma in: aClass ] ] ].
+	^ true
 ]
 
 { #category : #'type inference' }

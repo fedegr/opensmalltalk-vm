@@ -847,12 +847,12 @@ TMethod >> extractDirective: theSelector valueBlock: aBlock default: defaultResu
 	 to the pragma node, or defaultResult if there is no matching pragma."
 
 	| result found newStatements |
-	(properties at: theSelector ifAbsent: []) ifNotNil:
-		[:pragma|
-		^aBlock value: (TSendNode new
-							setSelector: pragma keyword
-							receiver: (TVariableNode new setName: 'self')
-							arguments: (pragma arguments collect: [:const| TConstantNode new setValue: const]))].
+	(properties at: theSelector ifAbsent: [  ]) ifNotNil: [ :pragma | 
+		^ aBlock value: (TSendNode new
+				   setSelector: pragma selector
+				   receiver: (TVariableNode new setName: 'self')
+				   arguments: (pragma arguments collect: [ :const | 
+						    TConstantNode new setValue: const ])) ].
 	"Pre-pragma backward compatibility:
 	 Scan the top-level statements for a labelling directive of the form:
 
@@ -860,23 +860,21 @@ TMethod >> extractDirective: theSelector valueBlock: aBlock default: defaultResu
 
 	 and remove the directive from the method body if found.
 	 Answer the result of evaluating aBock with the send node,
-	  or defaultResult if there is no labelling directive."	result := defaultResult.
+	  or defaultResult if there is no labelling directive."
+	result := defaultResult.
 	found := false.
 	newStatements := OrderedCollection new: parseTree statements size.
-	parseTree statements do:
-		[ :stmt |
-		(stmt isSend
-		 and: [stmt selector = theSelector])
-			ifTrue:
-				[found := true.
-				 result := aBlock value: stmt]
-			ifFalse:
-				[newStatements add: stmt]].
-	^found
-		ifTrue:
-			[parseTree setStatements: newStatements asArray.
-			 result]
-		ifFalse: [defaultResult]
+	parseTree statements do: [ :stmt | 
+		(stmt isSend and: [ stmt selector = theSelector ])
+			ifTrue: [ 
+				found := true.
+				result := aBlock value: stmt ]
+			ifFalse: [ newStatements add: stmt ] ].
+	^ found
+		  ifTrue: [ 
+			  parseTree setStatements: newStatements asArray.
+			  result ]
+		  ifFalse: [ defaultResult ]
 ]
 
 { #category : #transformations }
@@ -2672,15 +2670,15 @@ TMethod >> sharedLabel [
 
 { #category : #inlining }
 TMethod >> shouldIncorporatePragmaFromSuperMethod: aPragma [
-	(properties includesKey: aPragma keyword) ifFalse:
-		[^true].
-	((aPragma keyword beginsWith: #var:)
-	  and: [properties pragmas noneSatisfy:
-			[:p|
-			(p keyword beginsWith: #var:)
-			and: [(p argumentAt: 1) = (aPragma argumentAt: 1)]]]) ifTrue:
-		[^true].
-	^false
+	(properties includesKey: aPragma selector)
+		ifFalse: [ ^ true ].
+	((aPragma selector beginsWith: #var:)
+		and: [ properties pragmas
+				noneSatisfy: [ :p | 
+					(p selector beginsWith: #var:)
+						and: [ (p argumentAt: 1) = (aPragma argumentAt: 1) ] ] ])
+		ifTrue: [ ^ true ].
+	^ false
 ]
 
 { #category : #accessing }

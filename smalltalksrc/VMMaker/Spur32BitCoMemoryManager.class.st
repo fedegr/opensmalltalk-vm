@@ -49,7 +49,7 @@ Spur32BitCoMemoryManager class >> objectRepresentationClass [
 
 { #category : #simulation }
 Spur32BitCoMemoryManager class >> simulatorClass [
-	^Spur32BitMMLECoSimulator
+	^ Spur32BitMMLECoSimulator
 ]
 
 { #category : #'growing/shrinking memory' }
@@ -101,6 +101,12 @@ Spur32BitCoMemoryManager >> clearLeakMapAndMapAccessibleObjects [
 	 Override to set a bit at each Cog method"
 	super clearLeakMapAndMapAccessibleObjects.
 	cogit addCogMethodsToHeapMap
+]
+
+{ #category : #accessing }
+Spur32BitCoMemoryManager >> cogit: aCogit [ 
+	<doNotGenerate>
+	cogit := aCogit
 ]
 
 { #category : #'cog jit support' }
